@@ -27,7 +27,7 @@
     sh get-docker.sh
     ```
     
-    после собираем конейнеры
+    после собираем контейнеры
 
     > docker-compose build
     
