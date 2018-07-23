@@ -20,4 +20,6 @@
 
 1. [Установка](docs/01-installation.md)
 2. [Структура директорий](docs/02-dir-struct.md)
-2. [Технологии](docs/03-technologies.md)
+3. [Технологии](docs/03-technologies.md)
+4. [Сущности](docs/04-entities.md)
+
