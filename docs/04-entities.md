@@ -1,18 +1,22 @@
 # Сущности проекта
 
-## Certificate
+## <a name="certificate">Certificate</a>
+
+Справка
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | city | string | Город | - |
 | number | string | Номер | - |
-| dateFrom | DateFrom | Дата начала действия | - |
-| dateTo | DateTo | Дата окончания действия | - |
-| client | Client | Клиент | - |
-| type | CertificateType | Тип справки | - |
-| document | Document | Документ | - |
+| dateFrom | date | Дата начала действия | - |
+| dateTo | date | Дата окончания действия | - |
+| client | [Client](#client) | Клиент | - |
+| type | [CertificateType](#certificate-type) | Тип справки | - |
+| document | [Document](#document) | Документ | - |
 
-## CertificateType
+## <a name="certificate-type">CertificateType</a>
+
+Тип справки
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -25,8 +29,9 @@
 | contentBodyRight | text | Содержимое среднего блока | - |
 | contentFooter | text | Содержимое нижнего блока | - |
 
-## Client
+## <a name="client">Client</a>
 
+Клиент
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -37,19 +42,21 @@
 | firstname | string | Имя | - |
 | lastname | string | Фамилия | - |
 | middlename | string | Отчество | - |
-| lastResidenceDistrict | District | Место последнего проживания | - |
-| lastRegistrationDistrict | District | Место последней регистрации | - |
-| fieldValues | ClientFieldValue | Значения дополнительных полей | - |
-| notes | [Note] | Примечания | - |
-| contracts | [Contract] | Договоры | - |
-| documents | [Document] | Документы | - |
-| shelterHistories | [ShelterHistory] | Данные о проживаниях в приюте | - |
-| documentFiles | [DocumentFile] | Загруженные файлы документов | - |
-| services | [Service] | Полученные услуги | - |
-| certificates | [Certificate] | Справки | - |
-| generatedDocuments | [GeneratedDocument] | Сгенерированные документы | - |
+| lastResidenceDistrict | [District](#district) | Место последнего проживания | - |
+| lastRegistrationDistrict | [District](#district) | Место последней регистрации | - |
+| fieldValues | [ClientFieldValue](#client-field-value) | Значения дополнительных полей | - |
+| notes | \[[Note](#note)\] | Примечания | - |
+| contracts | \[[Contract](#contract)\] | Договоры | - |
+| documents | \[[Document](#document)\] | Документы | - |
+| shelterHistories | \[[ShelterHistory](#shelter-history)\] | Данные о проживаниях в приюте | - |
+| documentFiles | \[[DocumentFile](#document-file)\] | Загруженные файлы документов | - |
+| services | \[[Service](#service)\] | Полученные услуги | - |
+| certificates | \[[Certificate](#certificate)\] | Справки | - |
+| generatedDocuments | \[[GeneratedDocument](#generated-document)\] | Сгенерированные документы | - |
 
-## ClientField
+## <a name="client-field">ClientField</a>
+
+Дополнительное поле клиента
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -60,30 +67,36 @@
 | required | boolean | Обязательное поле | false |
 | multiple | boolean | Допускается выбор нескольких вариантов | false |
 | description | string | Подсказка | - |
-| options | [ClientFieldOption] | Поле | - |
+| options | \[[ClientFieldOption](#client-field-option)\] | Поле | - |
 
-## ClientFieldOption
+## <a name="client-field-option">ClientFieldOption</a>
+
+Вариант значения дополнительного поля клиента
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | notSingle | boolean | true - больше 1-го значения | - |
-| field | ClientField | Поле | - |
+| field | [ClientField](#client-field) | Поле | - |
 
-## ClientFieldValue
+## <a name="client-field-value">ClientFieldValue</a>
+
+Значение дополнительного поля клиента
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
-| field | ClientField | Поле | - |
-| client | Client | Клиент | - |
+| field | [ClientField](#client-field) | Поле | - |
+| client | [Client](#client) | Клиент | - |
 | text | text | Значене поля - текст | - |
-| datetime | datetime | Значение поля - дата/время | - |
-| option | ClientFieldOption | Вариант значения (если не multiple) | - |
-| options | ClientFieldOption | Варианты значения (если не multiple) | - |
+| datetime | date | Значение поля - дата/время | - |
+| option | [ClientFieldOption](#client-field-option) | Вариант значения (если не multiple) | - |
+| options | [ClientFieldOption](#client-field-option) | Варианты значения (если не multiple) | - |
 | filename | string | Имя файла для файлового поля | - |
 | file | UploadedField | Значение поля - файл | - |
 
-## Contract
+## <a name="contract">Contract</a>
+
+Договор (сервисный план)
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -91,42 +104,52 @@
 | number | string | Номер | - |
 | dateFrom | date | Дата начала | - |
 | dateTo | date | Дата завершения | - |
-| client | Client | Клиент | - |
-| status | ContractStatus | Статус | - |
-| document | Document | Документ | - |
-| items | [ContractItem] | Пункты | - |
+| client | [Client](#client) | Клиент | - |
+| status | [ContractStatus](#contract-status) | Статус | - |
+| document | [Document](#document) | Документ | - |
+| items | \[[ContractItem](#contract-item)\] | Пункты | - |
 
-## ContractItem
+## <a name="contract-item">ContractItem</a>
+
+Пункт договора (сервисного плана)
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | comment | text | Комментарий | - |
 | dateStart | date | Дата начала выполнения | - |
 | date | date | Дата выполнения | - |
-| contract | Contract | Договор | - |
-| type | ContractItemType | Тип | - |
+| contract | [Contract](#contract) | Договор | - |
+| type | [ContractItemType](#contract-item-type) | Тип | - |
 
-## ContractItemType
+## <a name="contract-item-type">ContractItemType</a>
+
+Тип пункта договора (сервисного плана)
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | shortName | string | Сокращенное название | - |
 
-## ContractStatus
+## <a name="contract-status">ContractStatus</a>
+
+Статус договора
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 
-## District
+## <a name="district">District</a>
+
+Район региона РФ
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
-| region | Region | Регион | - |
+| region | [Region](#region) | Регион | - |
 
-## Document
+## <a name="document">Document</a>
+
+Документ
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -137,40 +160,48 @@
 | numberPrefix | string | Серия | - |
 | registration | integer | Регистрация | - |
 | issued | string | Кем и когда выдан | - |
-| client | Client | Клиент | - |
-| type | DocumentType | Тип | - |
+| client | [Client](#client) | Клиент | - |
+| type | [DocumentType](#document-type) | Тип | - |
 
-## DocumentFile
+## <a name="document-file">DocumentFile</a>
+
+Загруженный файл документа
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | comment | text | Комментарий | - |
-| client | Client | Клиент | - |
-| type | DocumentType | Тип | - |
+| client | [Client](#client) | Клиент | - |
+| type | [DocumentType](#document-type) | Тип | - |
 | filename | string | Имя файла | - |
 | file | Vich\UploadableField | Файл | - |
 
-## DocumentType
+## <a name="document-type">DocumentType</a>
+
+Тип документа
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | type | integer | Тип | - |
 
-## GeneratedDocument
+## <a name="generated-document">GeneratedDocument</a>
+
+Построенный документ
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
-| client | Client | Клиент | - |
+| client | [Client](#client) | Клиент | - |
 | number | string | Номер | - |
-| type | GeneratedDocumentType | Тип | - |
-| startText | GeneratedDocumentStartText | Начальный текст | - |
-| endText | GeneratedDocumentEndText | Конечный текст | - |
+| type | [GeneratedDocumentType](#generated-document-type) | Тип | - |
+| startText | [GeneratedDocumentStartText](#generated-document-start-text) | Начальный текст | - |
+| endText | [GeneratedDocumentEndText](#generated-document-end-text) | Конечный текст | - |
 | text | text | Текст | - |
 | whom | text | Для кого | - |
 | signature | text | Подпись | - |
 
-## GeneratedDocumentEndText
+## <a name="generated-document-end-text">GeneratedDocumentEndText</a>
+
+Вариант конечного текста построенного документа
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -179,7 +210,9 @@
 | text | text | Текст | - |
 
 
-## GeneratedDocumentStartText
+## <a name="generated-document-start-text">GeneratedDocumentStartText</a>
+
+Вариант начального текста построенного документа
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -187,29 +220,35 @@
 | code | string | Код | - |
 | text | text | Текст | - |
 
-## GeneratedDocumentType
+## <a name="generated-document-type">GeneratedDocumentType</a>
+
+Тип построенного документа
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | code | string | Код | - |
 
-## History
+## <a name="history">History</a>
+
+История просмотров анкет клиентов
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
-| client | Client | Клиент | - |
+| client | [Client](#client) | Клиент | - |
 
-## HistoryDownload
+## <a name="history-download">HistoryDownload</a>
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
-| client | Client | Клиент | - |
-| user | User | Клиент | - |
+| client | [Client](#client) | Клиент | - |
+| user | [User](#user) | Клиент | - |
 | date | date | Дата | - |
-| certificateType | CertificateType | Клиент | - |
+| certificateType | [CertificateType](#certificate-type) | Клиент | - |
 
-## MenuItem
+## <a name="menu-item">MenuItem</a>
+
+Для настройки отображения пунктов меню в анкете клиента
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -217,56 +256,70 @@
 | code | string | Код | - |
 | enabled | boolean | Включено | true |
 
-## Note 
+## <a name="note">Note</a> 
+
+Примечание
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | text | text | Текст | - |
-| client | Client | Клиент | - |
+| client | [Client](#client) | Клиент | - |
 | important | boolean | Важное | true |
 
-## Notice
+## <a name="notice">Notice</a>
+
+Напоминание
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | text | text | Текст | - |
 | date | date | Дата | - |
-| client | Client | Клиент | - |
-| viewedBy | User | Кем просмотрено | - |
+| client | [Client](#client) | Клиент | - |
+| viewedBy | [User](#user) | Кем просмотрено | - |
 
-## Position
+## <a name="position">Position</a>
+
+Должность пользователя
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
-| users | [User] | Пользователи с данной должностью | - |
+| users | \[[User](#user)\] | Пользователи с данной должностью | - |
 
-## Region
+## <a name="region">Region</a>
+
+Регион РФ
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | shortName | string | Сокращённое название | - |
-| districts | [Dictrict] | Районы | - |
+| districts | \[[District](#district)\] | Районы | - |
 
-## Service
+## <a name="service">Service</a>
+
+Полученная услуга
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | comment | text | Комментарий | - |
 | amount | integer | Сумма денег | - |
-| client | Client | Клиент | - |
+| client | [Client](#client) | Клиент | - |
 
-## ServiceType
+## <a name="service-type">ServiceType</a>
+
+Тип услуги
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 | pay | boolean | Платная | - |
-| document | Document | Документ | - |
+| document | [Document](#document) | Документ | - |
 
-## ShelterHistory
+## <a name="shelter-history">ShelterHistory</a>
+
+Данные о проживании в приюте (договор о заселении)
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -277,12 +330,14 @@
 | typhusVaccinationDate | date | Дата прививки от тифа | - |
 | dateFrom | date | Дата заселения | - |
 | dateTo | date | Дата выселения | - |
-| room | ShelterRoom | Комната | - |
-| client | Client | Клиент | - |
-| status | ShelterStatus | Статус | - |
-| contract | Contract | Договор | - |
+| room | [ShelterRoom](#shelter-room) | Комната | - |
+| client | [Client](#client) | Клиент | - |
+| status | [ShelterStatus](#shelter-status) | Статус | - |
+| contract | [Contract](#contract) | Договор | - |
 
-## ShelterRoom
+## <a name="shelter-room">ShelterRoom</a>
+
+Комната приюта
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
@@ -291,32 +346,38 @@
 | currentOccupants | integer | Текущее кол-во жильцов | - |
 | comment | text | Комментарий | - |
 
-## ShelterStatus
+## <a name="shelter-status">ShelterStatus</a>
+
+Статус проживания в приюте
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | name | string | Название | - |
 
-## User
+## <a name="user">User</a>
+
+Сотрудник
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
 | firstname | string | Имя | - |
 | lastname | string | Фамилия | - |
 | middlename | string | Отчество | - |
-| position | Position | Должность | - |
+| position | [Position](#position) | Должность | - |
 | proxyDate | date | Дата доверенности | - |
 | proxyNum | string | Номер доверенности | - |
 | passport | string | Паспортные данные | - |
-| viewedNotices | [Notice] | Просмотренные уведомления | - |
-| viewedClients | [ViewedClient] | Просмотренные анкеты клиентов | - |
+| viewedNotices | \[[Notice](#notice)\] | Просмотренные уведомления | - |
+| viewedClients | \[[ViewedClient](#viewed-client)\] | Просмотренные анкеты клиентов | - |
 | createdBy | date | Дата создания | - |
 | updatedBy | date | Дата обновления | - |
 
 
-## ViewedClient
+## <a name="viewed-client">ViewedClient</a>
+
+Просмотренная анкета клиента (для истории просмотров)
 
 | Свойство | Тип  | Описание  | По умолчанию  |
 |---|---|---|---|
-| client | Client | Клиент | - |
-| createdBy | User | Кем создано | - |
+| client | [Client](#client) | Клиент | - |
+| createdBy | [User](#user) | Кем создано | - |
