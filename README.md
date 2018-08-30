@@ -22,4 +22,3 @@
 2. [Структура директорий](docs/02-dir-struct.md)
 3. [Технологии](docs/03-technologies.md)
 4. [Сущности](docs/04-entities.md)
-
