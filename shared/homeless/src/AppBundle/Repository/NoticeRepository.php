@@ -33,53 +33,6 @@ class NoticeRepository extends EntityRepository
     }
 
     /**
-     * Автоматические напоминания
-     * @param Client $client
-     * @return mixed
-     */
-    public function getAutoNotices(Client $client)
-    {
-        $shelterHistory = $this
-            ->getEntityManager()
-            ->getRepository('AppBundle:ShelterHistory')
-            ->createQueryBuilder('sh')
-            ->leftJoin('sh.status', 'shst')
-            ->where('sh.client = :client')
-            ->andWhere('shst.syncId = :status')
-            ->orderBy('sh.dateFrom', 'desc')
-            ->addOrderBy('sh.id', 'DESC')
-            ->setParameters(['client' => $client, 'status' => ShelterStatus::IN_PROCESS])
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-        $notices = [];
-
-        if (!$shelterHistory instanceof ShelterHistory) {
-            return $notices;
-        }
-
-        if (!$shelterHistory->getFluorographyDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прохождения флюорографии';
-        } elseif ($shelterHistory->getFluorographyDate()->diff(new \DateTime())->days > 180) {
-            $notices[] = 'С даты прохождения флюорографии прошло более 180 дней';
-        }
-
-        if (!$shelterHistory->getDiphtheriaVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от дифтерии';
-        }
-
-        if (!$shelterHistory->getHepatitisVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от гепатита';
-        }
-
-        if (!$shelterHistory->getTyphusVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от тифа';
-        }
-
-        return $notices;
-    }
-
-    /**
      * @param Client $client
      * @param User $user
      * @return mixed

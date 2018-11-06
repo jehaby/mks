@@ -831,14 +831,6 @@ class ClientAdmin extends BaseAdmin
             ->getRepository('AppBundle:Notice')
             ->getUnviewedCount($this->getSubject(), $user);
 
-        $noticesCount += count(
-            $this->getConfigurationPool()
-                ->getContainer()
-                ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:Notice')
-                ->getAutoNotices($this->getSubject())
-        );
-
         $menu->addChild(
             'Напоминания' . ($noticesCount > 0 ? " ($noticesCount)" : ''),
             ['uri' => $admin->generateUrl('app.notice.admin.list', ['id' => $id, 'filter' => ['date' => ['value' => ['end' => date('d.m.Y')]], 'viewed' => ['value' => 2]]])]

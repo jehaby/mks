@@ -239,16 +239,4 @@ class NoticeAdmin extends BaseAdmin
             }
         }
     }
-
-    public function getAutoNotices()
-    {
-        if ($this->getParent() != null) {
-            return $this
-                ->getConfigurationPool()
-                ->getContainer()
-                ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:Notice')
-                ->getAutoNotices($this->getParent()->getSubject());
-        }
-    }
 }
