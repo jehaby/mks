@@ -334,10 +334,19 @@ class ReportService
             'ID',
             'ФИО',
             'пункты сервисного плана с комментариями',
+            'статус',
             'комментарии к сервисному плану в целом',
+            'длительность выполнения',
             'ФИО соцработника, открывшего сервисный план',
         ]], null, 'A1');
-        $stmt = $this->em->getConnection()->prepare('SELECT c.id, concat(c.lastname, \' \', c.firstname, \' \', c.middlename), GROUP_CONCAT(CONCAT(cit1.name, \'(\' , ci1.comment, \')\')), cs.name, con.comment, concat(u.lastname, \' \', u.firstname, \' \', u.middlename)
+        $stmt = $this->em->getConnection()->prepare('SELECT 
+              c.id, 
+              concat(c.lastname, \' \', c.firstname, \' \', c.middlename), 
+              GROUP_CONCAT(CONCAT(cit1.name, \'(\' , ci1.comment, \')\')), 
+              cs.name,  
+              con.comment, 
+              TO_DAYS(con.date_to) - TO_DAYS(con.date_from),
+              concat(u.lastname, \' \', u.firstname, \' \', u.middlename)
             FROM contract con
             JOIN fos_user_user u ON con.created_by_id = u.id
             JOIN client c ON con.client_id = c.id
