@@ -6,7 +6,9 @@
         {% if shelterHistor.dateFrom|date('Y-m-d') < "now"|date('Y-m-d') and (shelterHistor.dateTo|date('Y-m-d') > "now"|date('Y-m-d') or (not shelterHistor.dateTo)) %}
             Проживает
         {% else %}
-            Проживал ранее
+            <span class="text-red text-bold">
+                Проживал ранее
+            </span>
         {% endif %}
     {% else %}
         Не проживал
