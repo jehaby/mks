@@ -88,7 +88,7 @@ file that was distributed with this source code.
 
                             {% block table_body %}
                                 <tbody>
-                                {% include admin.getTemplate('outer_list_rows_' ~ admin.getListMode()) %}
+                                {% include '@SonataAdmin/CRUD/list_outer_rows_list.html.twig' %}
                                 </tbody>
                             {% endblock %}
 
