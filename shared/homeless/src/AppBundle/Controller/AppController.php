@@ -170,7 +170,9 @@ class AppController extends Controller
     {
         $report = $this->get('app.report_service');
         return $this->render('@App/Admin/report.html.twig', [
-            'users' => $this->getDoctrine()->getEntityManager()->getRepository('ApplicationSonataUserBundle:User')->findAll(),
+            'users' => $this->getDoctrine()->getEntityManager()->getRepository('ApplicationSonataUserBundle:User')->findBy([
+                'locked' => false,
+            ]),
             'types' => $report->getTypes(),
         ]);
     }
