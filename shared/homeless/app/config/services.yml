@@ -262,6 +262,15 @@ services:
     class: AppBundle\Form\DataTransformer\CertificateTypeToChoiceFieldMaskTypeTransformer
     arguments: ['@app.certificate_type.repository']
 
+  app.position_to_choice_field_mask_type.transformer:
+    class: AppBundle\Form\DataTransformer\PositionToChoiceFieldMaskTypeTransformer
+    arguments: ['@app.position_option.repository']
+
+  app.position_option.repository:
+    class: AppBundle\Repository\PositionRepository
+    factory: ['@doctrine.orm.default_entity_manager', getRepository]
+    arguments: ['AppBundle\Entity\Position']
+
   app.client_field_option.repository:
     class: AppBundle\Repository\ClientFieldOptionRepository
     factory: ['@doctrine.orm.default_entity_manager', getRepository]
