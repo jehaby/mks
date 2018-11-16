@@ -263,6 +263,10 @@ class ClientAdmin extends BaseAdmin
                 'label' => 'Место рождения',
                 'required' => true,
             ])
+            ->add('isHomeless', CheckboxType::class, [
+                'label' => 'Бездомный',
+                'required' => false,
+            ])
             ->end();
 
         //дополнительные поля клиента
@@ -1064,15 +1068,20 @@ class ClientAdmin extends BaseAdmin
      */
     public function getTemplate($name)
     {
+        dump($name);
         switch ($name){
             case 'show':
                 $name = 'AppBundle:Admin\Client:base_show.html.twig';
+                break;
+            case 'edit':
+                $name = 'AppBundle:Admin\Client:base_edit.html.twig';
                 break;
             default:
                 $name = parent::getTemplate($name);
                 break;
         }
 
+        dump($name);
         return $name;
     }
 }
