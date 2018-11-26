@@ -68,6 +68,9 @@ class ClientAdmin extends BaseAdmin
             ->add('birthPlace', null, [
                 'label' => 'Место рождения',
             ])
+            ->add('isHomeless', null, [
+                'label' => 'Бездомный',
+            ])
             ->add('createdAt', 'date', [
                 'label' => 'Дата добавления',
             ])
@@ -265,6 +268,7 @@ class ClientAdmin extends BaseAdmin
             ])
             ->add('isHomeless', CheckboxType::class, [
                 'label' => 'Бездомный',
+                'label_attr'=> ['class'=> 'changeSelectinsData'],
                 'required' => false,
             ])
             ->end();
@@ -1068,7 +1072,6 @@ class ClientAdmin extends BaseAdmin
      */
     public function getTemplate($name)
     {
-        dump($name);
         switch ($name){
             case 'show':
                 $name = 'AppBundle:Admin\Client:base_show.html.twig';
@@ -1081,7 +1084,6 @@ class ClientAdmin extends BaseAdmin
                 break;
         }
 
-        dump($name);
         return $name;
     }
 }

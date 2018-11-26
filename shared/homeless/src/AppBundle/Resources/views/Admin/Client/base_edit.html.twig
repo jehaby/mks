@@ -1,1 +1,58 @@
 {% extends 'SonataAdminBundle:CRUD:base_edit.html.twig' %}
+
+{% block form %}
+    {{ block('parentForm') }}
+
+    <script>
+        $(document).ready(function () {
+            if ($('.changeSelectinsData').parents('.form-group').find('[type="checkbox"]').prop('checked')) {
+                $('.select2-result-label,.select2-chosen').each(function(key, item) {
+                    if ($(item).text() === 'Нет ответа') {
+                        $(item).text('Не отвечает')
+                    }
+                });
+                $('select option').each(function(key, item) {
+                    if ($(item).text() === 'Нет ответа') {
+                        $(item).text('Не отвечает')
+                    }
+                });
+            } else {
+                $('.select2-result-label,.select2-chosen').each(function(key, item) {
+                    if ($(item).text() === 'Не отвечает') {
+                        $(item).text('Нет ответа')
+                    }
+                });
+                $('select option').each(function(key, item) {
+                    if ($(item).text() === 'Не отвечает') {
+                        $(item).text('Нет ответа')
+                    }
+                });
+            }
+            $('.changeSelectinsData, .changeSelectinsData .iCheck-helper').on('click', function (event) {
+                if ($(event.currentTarget).parents('.form-group').find('[type="checkbox"]').prop('checked')) {
+                    $('.select2-result-label,.select2-chosen').each(function(key, item) {
+                        if ($(item).text() === 'Нет ответа') {
+                            $(item).text('Не отвечает')
+                        }
+                    });
+                    $('select option').each(function(key, item) {
+                        if ($(item).text() === 'Нет ответа') {
+                            $(item).text('Не отвечает')
+                        }
+                    });
+                } else {
+                    $('.select2-result-label,.select2-chosen').each(function(key, item) {
+                        if ($(item).text() === 'Не отвечает') {
+                            $(item).text('Нет ответа')
+                        }
+                    });
+                    $('select option').each(function(key, item) {
+                        if ($(item).text() === 'Не отвечает') {
+                            $(item).text('Нет ответа')
+                        }
+                    });
+                }
+            })
+        });
+    </script>
+{% endblock %}

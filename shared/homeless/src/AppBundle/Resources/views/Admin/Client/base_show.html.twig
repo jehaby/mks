@@ -56,7 +56,11 @@
                                                     <strong>{{ elements[field_name].options.label }}</strong>
                                                 </div>
                                                 <div class="col-md-6 no-padding">
-                                                    {{ elements[field_name]|render_view_element(object)|replace({ (elements[field_name].options.label): '' })|raw|striptags|trim }}
+                                                    {% if object.isHomeless == true and elements[field_name]|render_view_element(object)|replace({ (elements[field_name].options.label): '' })|raw|striptags|trim == 'Нет ответа' %}
+                                                        Не отвечает
+                                                    {% else %}
+                                                        {{ elements[field_name]|render_view_element(object)|replace({ (elements[field_name].options.label): '' })|raw|striptags|trim }}
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         {% endif %}
