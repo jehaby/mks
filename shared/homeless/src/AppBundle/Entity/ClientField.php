@@ -63,6 +63,12 @@ class ClientField extends BaseEntity
     private $required = false;
 
     /**
+     * Обязательное для бездомных
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $mandatoryForHomeless = false;
+
+    /**
      * Допускается выбор нескольких вариантов одновременно
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -363,5 +369,24 @@ class ClientField extends BaseEntity
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getMandatoryForHomeless()
+    {
+        return $this->mandatoryForHomeless;
+    }
+
+    /**
+     * @param bool $mandatoryForHomeless
+     * @return ClientField
+     */
+    public function setMandatoryForHomeless($mandatoryForHomeless)
+    {
+        $this->mandatoryForHomeless = $mandatoryForHomeless;
+
+        return $this;
     }
 }

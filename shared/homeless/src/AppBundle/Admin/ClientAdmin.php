@@ -9,6 +9,7 @@ use AppBundle\Entity\ClientFieldValue;
 use AppBundle\Entity\MenuItem;
 use AppBundle\Form\DataTransformer\ImageStringToFileTransformer;
 use AppBundle\Form\Type\AppHomelessFromDateType;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Knp\Menu\ItemInterface as MenuItemInterface;
@@ -185,11 +186,28 @@ class ClientAdmin extends BaseAdmin
      */
     protected function configureFormFields(FormMapper $formMapper)
     {
-        $formMapper->getFormBuilder()->addEventListener(FormEvents::SUBMIT, function (FormEvent $event) {
+        $em = $this
+            ->getConfigurationPool()
+            ->getContainer()
+            ->get('doctrine.orm.entity_manager');
+        $formMapper->getFormBuilder()->addEventListener(FormEvents::SUBMIT, function (FormEvent $event) use ($em){
             $client = $event->getForm()->getData();
 
             if (!$client instanceof Client) {
                 return;
+            }
+            if ($client->getisHomeless()) {
+                /** @var $em EntityManagerInterface */
+                $clientsFields = $em->getRepository(ClientField::class)->findAll();
+                foreach ($clientsFields as $clientsField) {
+                    /** @var $clientsField ClientField */
+                    if ($clientsField->getMandatoryForHomeless()) {
+                        $fieldForm = $event->getForm()->get('additionalField' . $clientsField->getCode());
+                        if (!$fieldForm->getData()) {
+                            $event->getForm()->get('additionalField' . $clientsField->getCode())->addError(new FormError('Поле обязательное для заполнения'));
+                        }
+                    }
+                }
             }
 
             foreach ($client->getFieldValues() as $fieldValue) {
@@ -287,7 +305,8 @@ class ClientAdmin extends BaseAdmin
         foreach ($fields as $field) {
             $options = [
                 'label' => $field->getName(),
-                'required' => $field->getRequired()
+                'required' => $field->getRequired(),
+                'attr' => ["class" => $field->getMandatoryForHomeless() ? 'mandatory-for-homeless' : '']
             ];
 
             switch ($field->getType()) {

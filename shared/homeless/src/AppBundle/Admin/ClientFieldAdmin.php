@@ -38,6 +38,9 @@ class ClientFieldAdmin extends BaseAdmin
             ->add('required', null, [
                 'label' => 'Обязательное',
             ])
+            ->add('mandatoryForHomeless', null, [
+                'label' => 'Обязательное для бездомных',
+            ])
             ->add('type', 'choice', [
                 'label' => 'Тип',
                 'choices' => [
