@@ -96,7 +96,7 @@ class ClientAdmin extends BaseAdmin
         $showMapper
             ->with('Дополнительная информация', [
                 'class' => 'col-md-12',
-                'box_class'   => 'box box-primary box-client-field-all',
+                'box_class' => 'box box-primary box-client-field-all',
                 'type' => 'additional-info',
                 'subtype' => 'main-block-start'
             ]);
@@ -104,9 +104,9 @@ class ClientAdmin extends BaseAdmin
         $showMapperAdditionalInfo = [];
 
         $showMapperAdditionalInfo[] = [
-            'with' => ['   ',[
+            'with' => ['   ', [
                 'class' => 'col-md-4',
-                'box_class'   => 'box-client-field',
+                'box_class' => 'box-client-field',
                 'type' => 'additional-info',
                 'subtype' => 'item'
             ]]
@@ -125,9 +125,9 @@ class ClientAdmin extends BaseAdmin
             foreach ($fieldValues as $key => $fieldValue) {
                 if (0 !== $key && 0 == $key % 1) {
                     $showMapperAdditionalInfo[] = [
-                        'with' => [$blankTabName,[
+                        'with' => [$blankTabName, [
                             'class' => 'col-md-4 additional-info-block',
-                            'box_class'   => 'box-client-field',
+                            'box_class' => 'box-client-field',
                             'type' => 'additional-info',
                             'subtype' => 'item'
                         ]],
@@ -206,7 +206,7 @@ class ClientAdmin extends BaseAdmin
 
                 $options = $event->getForm()->getNormData()->additionalFieldValues;
 
-                if(!isset($options[$field->getCode()])){
+                if (!isset($options[$field->getCode()])) {
                     continue;
                 }
 
@@ -781,68 +781,82 @@ class ClientAdmin extends BaseAdmin
 
         $id = $admin->getRequest()->get('id');
 
-        $menu->addChild(
-            'Документы',
-            ['uri' => $admin->generateUrl('app.document.admin.list', ['id' => $id])]
-        );
-
-        $menu->addChild(
-            'Файлы',
-            ['uri' => $admin->generateUrl('app.document_file.admin.list', ['id' => $id])]
-        );
-
-        $menu->addChild(
-            'Сервисные планы',
-            ['uri' => $admin->generateUrl('app.contract.admin.list', ['id' => $id])]
-        );
-
-        if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
+        if ($this->isGranted('document')) {
             $menu->addChild(
-                'Проживание в приюте',
-                ['uri' => $admin->generateUrl('app.shelter_history.admin.list', ['id' => $id])]
+                'Документы',
+                ['uri' => $admin->generateUrl('app.document.admin.list', ['id' => $id])]
             );
         }
 
-        if ($this->isMenuItemEnabled('certificate')) {
+        if ($this->isGranted('document_file')) {
             $menu->addChild(
-                'Выдать справку',
-                ['uri' => $admin->generateUrl('app.certificate.admin.list', ['id' => $id])]
+                'Файлы',
+                ['uri' => $admin->generateUrl('app.document_file.admin.list', ['id' => $id])]
             );
         }
 
-        if ($this->isMenuItemEnabled('generated_document')) {
+        if ($this->isGranted('contract')) {
             $menu->addChild(
-                'Построить документ',
-                ['uri' => $admin->generateUrl('app.generated_document.admin.list', ['id' => $id])]
+                'Сервисные планы',
+                ['uri' => $admin->generateUrl('app.contract.admin.list', ['id' => $id])]
             );
         }
 
-        $user = $this
-            ->getConfigurationPool()
-            ->getContainer()
-            ->get('security.token_storage')
-            ->getToken()
-            ->getUser();
+        if ($this->isGranted('shelter_history')) {
+            if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
+                $menu->addChild(
+                    'Проживание в приюте',
+                    ['uri' => $admin->generateUrl('app.shelter_history.admin.list', ['id' => $id])]
+                );
+            }
+        }
 
-        $noticesCount = $this
-            ->getConfigurationPool()
-            ->getContainer()
-            ->get('doctrine.orm.entity_manager')
-            ->getRepository('AppBundle:Notice')
-            ->getUnviewedCount($this->getSubject(), $user);
+        if ($this->isGranted('certificate')) {
+            if ($this->isMenuItemEnabled('certificate')) {
+                $menu->addChild(
+                    'Выдать справку',
+                    ['uri' => $admin->generateUrl('app.certificate.admin.list', ['id' => $id])]
+                );
+            }
+        }
 
-        $noticesCount += count(
-            $this->getConfigurationPool()
+        if ($this->isGranted('generated_document')) {
+            if ($this->isMenuItemEnabled('generated_document')) {
+                $menu->addChild(
+                    'Построить документ',
+                    ['uri' => $admin->generateUrl('app.generated_document.admin.list', ['id' => $id])]
+                );
+            }
+        }
+
+        if ($this->isGranted('notice')) {
+            $user = $this
+                ->getConfigurationPool()
+                ->getContainer()
+                ->get('security.token_storage')
+                ->getToken()
+                ->getUser();
+
+            $noticesCount = $this
+                ->getConfigurationPool()
                 ->getContainer()
                 ->get('doctrine.orm.entity_manager')
                 ->getRepository('AppBundle:Notice')
-                ->getAutoNotices($this->getSubject())
-        );
+                ->getUnviewedCount($this->getSubject(), $user);
 
-        $menu->addChild(
-            'Напоминания' . ($noticesCount > 0 ? " ($noticesCount)" : ''),
-            ['uri' => $admin->generateUrl('app.notice.admin.list', ['id' => $id, 'filter' => ['date' => ['value' => ['end' => date('d.m.Y')]], 'viewed' => ['value' => 2]]])]
-        );
+            $noticesCount += count(
+                $this->getConfigurationPool()
+                    ->getContainer()
+                    ->get('doctrine.orm.entity_manager')
+                    ->getRepository('AppBundle:Notice')
+                    ->getAutoNotices($this->getSubject())
+            );
+
+            $menu->addChild(
+                'Напоминания' . ($noticesCount > 0 ? " ($noticesCount)" : ''),
+                ['uri' => $admin->generateUrl('app.notice.admin.list', ['id' => $id, 'filter' => ['date' => ['value' => ['end' => date('d.m.Y')]], 'viewed' => ['value' => 2]]])]
+            );
+        }
     }
 
     /**
@@ -1034,7 +1048,7 @@ class ClientAdmin extends BaseAdmin
      *
      * @return null|object
      */
-    private function getFieldOptionValueId($valueName,$field)
+    private function getFieldOptionValueId($valueName, $field)
     {
         $em = $this
             ->getConfigurationPool()
@@ -1054,7 +1068,7 @@ class ClientAdmin extends BaseAdmin
     {
         $list = parent::configureActionButtons($action, $object);
 
-        unset($list['create'],$list['list']);
+        unset($list['create'], $list['list']);
 
         return $list;
     }
@@ -1064,7 +1078,7 @@ class ClientAdmin extends BaseAdmin
      */
     public function getTemplate($name)
     {
-        switch ($name){
+        switch ($name) {
             case 'show':
                 $name = 'AppBundle:Admin\Client:base_show.html.twig';
                 break;
