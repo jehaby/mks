@@ -2,6 +2,10 @@
 
 {% block field %}
     {% if object.filename %}
+        {% if '.png' in object.filename or '.gif' in object.filename or '.jpg' in object.filename or '.jpeg' in object.filename %}
+            <img src="{{ vich_uploader_asset(object, 'file') }}" width="400px"/>
+        {% endif %}
+
         <a href="{{ vich_uploader_asset(object, 'file') }}" download>{{ object.filename }}</a>
     {% endif %}
 {% endblock %}
