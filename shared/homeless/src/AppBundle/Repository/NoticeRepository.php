@@ -155,7 +155,7 @@ class NoticeRepository extends EntityRepository
             $type3 = $this
                 ->getEntityManager()
                 ->getRepository(ResidentQuestionnaire::class)
-                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_3]);
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_3, 'client' => $client]);
             if (!$type3) {
                 $type3 = new ResidentQuestionnaire();
                 $type3->setClient($client);
@@ -171,7 +171,7 @@ class NoticeRepository extends EntityRepository
             $type6 = $this
                 ->getEntityManager()
                 ->getRepository(ResidentQuestionnaire::class)
-                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_6]);
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_6, 'client' => $client]);
             if (!$type6) {
                 $type6 = new ResidentQuestionnaire();
                 $type6->setClient($client);
@@ -187,7 +187,7 @@ class NoticeRepository extends EntityRepository
             $type12 = $this
                 ->getEntityManager()
                 ->getRepository(ResidentQuestionnaire::class)
-                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_12]);
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_12, 'client' => $client]);
             if (!$type12) {
                 $type12 = new ResidentQuestionnaire();
                 $type12->setClient($client);
