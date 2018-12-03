@@ -80,6 +80,9 @@ class ResidentQuestionnaireAdmin extends BaseAdmin
         $listMapper
             ->addIdentifier('type', null, [
                 'label' => 'Тип',
+            ])
+            ->add('isFull', 'boolean', [
+                'label' => 'Заполнено',
             ]);
         $listMapper
             ->add('_action', null, [
