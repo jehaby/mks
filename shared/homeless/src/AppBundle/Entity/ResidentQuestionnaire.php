@@ -324,4 +324,21 @@ class ResidentQuestionnaire
     {
         $this->reasonForPetitionIds = implode(',', $reasonForPetitionIds);
     }
+
+    /**
+     * Заполнено менеджером?
+     *
+     * @return bool
+     */
+    public function isFull()
+    {
+        return $this->isDwelling !== null ||
+            $this->roomTypeId !== null ||
+            $this->isWork !== null ||
+            $this->isWorkOfficial !== null ||
+            $this->isWorkConstant !== null ||
+            $this->changedJobsCountId !== null ||
+            $this->reasonForTransitionIds !== null ||
+            $this->reasonForPetitionIds !== null;
+    }
 }

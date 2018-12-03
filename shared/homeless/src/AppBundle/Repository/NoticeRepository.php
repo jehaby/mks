@@ -3,6 +3,7 @@
 namespace AppBundle\Repository;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ResidentQuestionnaire;
 use AppBundle\Entity\ShelterHistory;
 use AppBundle\Entity\ShelterStatus;
 use Application\Sonata\UserBundle\Entity\User;
@@ -30,53 +31,6 @@ class NoticeRepository extends EntityRepository
             ->getOneOrNullResult();
 
         return $result['cnt'];
-    }
-
-    /**
-     * Автоматические напоминания
-     * @param Client $client
-     * @return mixed
-     */
-    public function getAutoNotices(Client $client)
-    {
-        $shelterHistory = $this
-            ->getEntityManager()
-            ->getRepository('AppBundle:ShelterHistory')
-            ->createQueryBuilder('sh')
-            ->leftJoin('sh.status', 'shst')
-            ->where('sh.client = :client')
-            ->andWhere('shst.syncId = :status')
-            ->orderBy('sh.dateFrom', 'desc')
-            ->addOrderBy('sh.id', 'DESC')
-            ->setParameters(['client' => $client, 'status' => ShelterStatus::IN_PROCESS])
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-        $notices = [];
-
-        if (!$shelterHistory instanceof ShelterHistory) {
-            return $notices;
-        }
-
-        if (!$shelterHistory->getFluorographyDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прохождения флюорографии';
-        } elseif ($shelterHistory->getFluorographyDate()->diff(new \DateTime())->days > 180) {
-            $notices[] = 'С даты прохождения флюорографии прошло более 180 дней';
-        }
-
-        if (!$shelterHistory->getDiphtheriaVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от дифтерии';
-        }
-
-        if (!$shelterHistory->getHepatitisVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от гепатита';
-        }
-
-        if (!$shelterHistory->getTyphusVaccinationDate() instanceof \DateTime) {
-            $notices[] = 'Отсутствует дата прививки от тифа';
-        }
-
-        return $notices;
     }
 
     /**
@@ -172,5 +126,80 @@ class NoticeRepository extends EntityRepository
         }
 
         return $result;
+    }
+
+    /**
+     * Автоматические напоминания
+     * @param Client $client
+     * @return mixed
+     */
+    public function getAutoNotices(Client $client)
+    {
+        $shelterHistory = $this
+            ->getEntityManager()
+            ->getRepository(ShelterHistory::class)
+            ->createQueryBuilder('sh')
+            ->where('sh.client = :client')
+            ->orderBy('sh.dateTo', 'ASC')
+            ->addOrderBy('sh.id', 'ASC')
+            ->setParameters(['client' => $client])
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        $notices = [];
+
+        if (!$shelterHistory instanceof ShelterHistory || !$shelterHistory->getDateTo()) {
+            return $notices;
+        }
+        if ($shelterHistory->getDateTo()->diff(new \DateTime())->days > 90) {
+            $type3 = $this
+                ->getEntityManager()
+                ->getRepository(ResidentQuestionnaire::class)
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_3]);
+            if (!$type3) {
+                $type3 = new ResidentQuestionnaire();
+                $type3->setClient($client);
+                $type3->setTypeId(ResidentQuestionnaire::TYPE_3);
+                $this->getEntityManager()->persist($type3);
+                $this->getEntityManager()->flush();
+            }
+            if (!$type3->isFull()) {
+                $notices[] = 'Необходимо заполнить анкету проживающего';
+            }
+        }
+        if ($shelterHistory->getDateTo()->diff(new \DateTime())->days > 180) {
+            $type6 = $this
+                ->getEntityManager()
+                ->getRepository(ResidentQuestionnaire::class)
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_6]);
+            if (!$type6) {
+                $type6 = new ResidentQuestionnaire();
+                $type6->setClient($client);
+                $type6->setTypeId(ResidentQuestionnaire::TYPE_6);
+                $this->getEntityManager()->persist($type6);
+                $this->getEntityManager()->flush();
+            }
+            if (!$type6->isFull()) {
+                $notices[] = 'Необходимо заполнить анкету проживающего';
+            }
+        }
+        if ($shelterHistory->getDateTo()->diff(new \DateTime())->days > 365) {
+            $type12 = $this
+                ->getEntityManager()
+                ->getRepository(ResidentQuestionnaire::class)
+                ->findOneBy(['typeId' => ResidentQuestionnaire::TYPE_12]);
+            if (!$type12) {
+                $type12 = new ResidentQuestionnaire();
+                $type12->setClient($client);
+                $type12->setTypeId(ResidentQuestionnaire::TYPE_12);
+                $this->getEntityManager()->persist($type12);
+                $this->getEntityManager()->flush();
+            }
+            if (!$type12->isFull()) {
+                $notices[] = 'Необходимо заполнить анкету проживающего';
+            }
+        }
+
+        return $notices;
     }
 }
