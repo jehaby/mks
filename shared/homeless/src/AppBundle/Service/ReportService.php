@@ -451,8 +451,8 @@ WHERE cf.code = \'breadwinner\' AND cfvcfo.client_field_option_id IN (' . implod
             LEFT JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
             LEFT JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
             JOIN contract_status cs ON con.status_id = cs.id
-            WHERE 1=1 ' . (($createServicedateFrom || $createServiceFromTo) ? ' AND con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo ' : '') .
-            (($createClientdateFrom || $createClientFromTo) ? ' AND c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo ' : '') .
+            WHERE con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo AND 
+                  c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo ' .
             ($clientsIds !== null ? 'AND c.id IN (' . implode(',', $clientsIds) . ')' : '')
         );
         $parameters = [
