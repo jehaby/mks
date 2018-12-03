@@ -456,10 +456,10 @@ WHERE cf.code = \'breadwinner\' AND cfvcfo.client_field_option_id IN (' . implod
             ($clientsIds !== null ? 'AND c.id IN (' . implode(',', $clientsIds) . ')' : '')
         );
         $parameters = [
-            ':createServicedateFrom' => $createServicedateFrom ? $createServicedateFrom : '2000-01-01',
-            ':createServiceFromTo' => $createServiceFromTo ? $createServiceFromTo : date('Y-m-d'),
-            ':createClientdateFrom' => $createClientdateFrom ? $createClientdateFrom : '2000-01-01',
-            ':createClientFromTo' => $createClientFromTo ? $createClientFromTo : date('Y-m-d'),
+            ':createServicedateFrom' => $createServicedateFrom ? date('Y-m-d', strtotime($createServicedateFrom)) : '2000-01-01',
+            ':createServiceFromTo' => $createServiceFromTo ? date('Y-m-d', strtotime($createServiceFromTo)) : date('Y-m-d'),
+            ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '2000-01-01',
+            ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
         ];
         $stmt->execute($parameters);
         $clientsIds = [];
