@@ -2,11 +2,19 @@
 
 namespace AppBundle\Admin;
 
+use AppBundle\Entity\CertificateType;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\ClientField;
 use AppBundle\Entity\ClientFieldOption;
 use AppBundle\Entity\ClientFieldValue;
+use AppBundle\Entity\Contract;
+use AppBundle\Entity\Document;
+use AppBundle\Entity\DocumentFile;
+use AppBundle\Entity\GeneratedDocument;
 use AppBundle\Entity\MenuItem;
+use AppBundle\Entity\Note;
+use AppBundle\Entity\Service;
+use AppBundle\Entity\ShelterHistory;
 use AppBundle\Form\DataTransformer\ImageStringToFileTransformer;
 use AppBundle\Form\Type\AppHomelessFromDateType;
 use Doctrine\ORM\EntityRepository;
@@ -77,104 +85,112 @@ class ClientAdmin extends BaseAdmin
             ])
             ->end();
 
-        $showMapper
-            ->with('Последние услуги', ['class' => 'col-md-4'])
-            ->add('services', 'array', [
-                'label' => ' ',
-                'template' => '/admin/fields/client_services_show.html.twig'
-            ])
-            ->end();
+        $securityContext = $this->getConfigurationPool()->getContainer()->get('security.context');
+        if ($securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_ALL')) {
+            $showMapper
+                ->with('Последние услуги', ['class' => 'col-md-4'])
+                ->add('services', 'array', [
+                    'label' => ' ',
+                    'template' => '/admin/fields/client_services_show.html.twig'
+                ])
+                ->end();
+        }
 
-        $showMapper
-            ->with('Последние примечания')
-            ->add('notes', 'array', [
-                'label' => ' ',
-                'template' => '/admin/fields/client_notes_show.html.twig'
-            ])
-            ->end();
 
-        $showMapper
-            ->with('Дополнительная информация', [
-                'class' => 'col-md-12',
-                'box_class' => 'box box-primary box-client-field-all',
-                'type' => 'additional-info',
-                'subtype' => 'main-block-start'
-            ]);
+        if ($securityContext->isGranted('ROLE_APP_NOTE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_ALL')) {
+            $showMapper
+                ->with('Последние примечания')
+                ->add('notes', 'array', [
+                    'label' => ' ',
+                    'template' => '/admin/fields/client_notes_show.html.twig'
+                ])
+                ->end();
+        }
 
-        $showMapperAdditionalInfo = [];
+        if ($securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_EDIT') || $securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_ALL')) {
+            $showMapper
+                ->with('Дополнительная информация', [
+                    'class' => 'col-md-12',
+                    'box_class' => 'box box-primary box-client-field-all',
+                    'type' => 'additional-info',
+                    'subtype' => 'main-block-start'
+                ]);
 
-        $showMapperAdditionalInfo[] = [
-            'with' => ['   ', [
-                'class' => 'col-md-4',
-                'box_class' => 'box-client-field',
-                'type' => 'additional-info',
-                'subtype' => 'item'
-            ]]
-        ];
+            $showMapperAdditionalInfo = [];
 
-        // Дополнительные поля клиента
-        if ($this->hasSubject()) {
-            $fieldValues = $this
-                ->getConfigurationPool()
-                ->getContainer()
-                ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:ClientFieldValue')
-                ->findByClient($this->getSubject());
+            $showMapperAdditionalInfo[] = [
+                'with' => ['   ', [
+                    'class' => 'col-md-4',
+                    'box_class' => 'box-client-field',
+                    'type' => 'additional-info',
+                    'subtype' => 'item'
+                ]]
+            ];
 
-            $blankTabName = '    ';
-            foreach ($fieldValues as $key => $fieldValue) {
-                if (0 !== $key && 0 == $key % 1) {
-                    $showMapperAdditionalInfo[] = [
-                        'with' => [$blankTabName, [
-                            'class' => 'col-md-4 additional-info-block',
-                            'box_class' => 'box-client-field',
-                            'type' => 'additional-info',
-                            'subtype' => 'item'
-                        ]],
-                    ];
-                    $blankTabName .= ' ';
+            // Дополнительные поля клиента
+            if ($this->hasSubject()) {
+                $fieldValues = $this
+                    ->getConfigurationPool()
+                    ->getContainer()
+                    ->get('doctrine.orm.entity_manager')
+                    ->getRepository('AppBundle:ClientFieldValue')
+                    ->findByClient($this->getSubject());
+
+                $blankTabName = '    ';
+                foreach ($fieldValues as $key => $fieldValue) {
+                    if (0 !== $key && 0 == $key % 1) {
+                        $showMapperAdditionalInfo[] = [
+                            'with' => [$blankTabName, [
+                                'class' => 'col-md-4 additional-info-block',
+                                'box_class' => 'box-client-field',
+                                'type' => 'additional-info',
+                                'subtype' => 'item'
+                            ]],
+                        ];
+                        $blankTabName .= ' ';
+                    }
+
+                    $field = $fieldValue->getField();
+
+                    $options = ['label' => $field->getName()];
+
+                    if ($field->getType() == ClientField::TYPE_OPTION) {
+                        $options['choices'] = $field->getOptionsArray();
+                        if ($field->getMultiple()) {
+                            $options['multiple'] = true;
+                            $options['template'] = '/admin/fields/show_array.html.twig';
+                        }
+                    }
+
+                    if ($field->getType() == ClientField::TYPE_FILE) {
+                        $options['template'] = '/admin/fields/client_file_show.html.twig';
+                    }
+
+                    if ($field->getType() == ClientField::TYPE_TEXT) {
+                        $options['template'] = '/admin/fields/client_text_show.html.twig';
+                    }
+                    if ($field->getCode() == 'homelessFrom') {
+                        $options['pattern'] = 'MMM y';
+                    }
+                    $showMapperAdditionalInfo[count($showMapperAdditionalInfo) - 1]['add'] = ['additionalField' . $field->getCode(), $field->getShowFieldType(), $options];
                 }
+            }
 
-                $field = $fieldValue->getField();
+            $showMapperAdditionalInfoSort = [];
+            foreach ($showMapperAdditionalInfo as $key => $item) {
+                $showMapperAdditionalInfoSort[$key % ceil(count($showMapperAdditionalInfo) / 3)][$key / ceil(count($showMapperAdditionalInfo) / 3)] = $item;
+            }
 
-                $options = ['label' => $field->getName()];
-
-                if ($field->getType() == ClientField::TYPE_OPTION) {
-                    $options['choices'] = $field->getOptionsArray();
-                    if ($field->getMultiple()) {
-                        $options['multiple'] = true;
-                        $options['template'] = '/admin/fields/show_array.html.twig';
+            foreach ($showMapperAdditionalInfoSort as $showMapperAdditionalInfoSortItems) {
+                foreach ($showMapperAdditionalInfoSortItems as $item) {
+                    if (isset($item['add'])) {
+                        $reflectionMethod = new \ReflectionMethod(ShowMapper::class, 'add');
+                        $reflectionMethod->invokeArgs($showMapper, $item['add']);
                     }
                 }
-
-                if ($field->getType() == ClientField::TYPE_FILE) {
-                    $options['template'] = '/admin/fields/client_file_show.html.twig';
-                }
-
-                if ($field->getType() == ClientField::TYPE_TEXT) {
-                    $options['template'] = '/admin/fields/client_text_show.html.twig';
-                }
-                if ($field->getCode() == 'homelessFrom') {
-                    $options['pattern'] = 'MMM y';
-                }
-                $showMapperAdditionalInfo[count($showMapperAdditionalInfo) - 1]['add'] = ['additionalField' . $field->getCode(), $field->getShowFieldType(), $options];
             }
+            $showMapper->end();
         }
-
-        $showMapperAdditionalInfoSort = [];
-        foreach ($showMapperAdditionalInfo as $key => $item) {
-            $showMapperAdditionalInfoSort[$key % ceil(count($showMapperAdditionalInfo) / 3)][$key / ceil(count($showMapperAdditionalInfo) / 3)] = $item;
-        }
-
-        foreach ($showMapperAdditionalInfoSort as $showMapperAdditionalInfoSortItems) {
-            foreach ($showMapperAdditionalInfoSortItems as $item) {
-                if (isset($item['add'])) {
-                    $reflectionMethod = new \ReflectionMethod(ShowMapper::class, 'add');
-                    $reflectionMethod->invokeArgs($showMapper, $item['add']);
-                }
-            }
-        }
-        $showMapper->end();
     }
 
     /**
@@ -781,28 +797,30 @@ class ClientAdmin extends BaseAdmin
 
         $id = $admin->getRequest()->get('id');
 
-        if ($this->isGranted('document')) {
+        $securityContext = $this->getConfigurationPool()->getContainer()->get('security.context');
+
+        if ($securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_ALL')) {
             $menu->addChild(
                 'Документы',
                 ['uri' => $admin->generateUrl('app.document.admin.list', ['id' => $id])]
             );
         }
 
-        if ($this->isGranted('document_file')) {
+        if ($securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_ALL')) {
             $menu->addChild(
                 'Файлы',
                 ['uri' => $admin->generateUrl('app.document_file.admin.list', ['id' => $id])]
             );
         }
 
-        if ($this->isGranted('contract')) {
+        if ($securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_ALL')) {
             $menu->addChild(
                 'Сервисные планы',
                 ['uri' => $admin->generateUrl('app.contract.admin.list', ['id' => $id])]
             );
         }
 
-        if ($this->isGranted('shelter_history')) {
+        if ($securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
                 $menu->addChild(
                     'Проживание в приюте',
@@ -811,7 +829,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($this->isGranted('certificate')) {
+        if ($securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('certificate')) {
                 $menu->addChild(
                     'Выдать справку',
@@ -820,7 +838,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($this->isGranted('generated_document')) {
+        if ($securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('generated_document')) {
                 $menu->addChild(
                     'Построить документ',
@@ -829,7 +847,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($this->isGranted('notice')) {
+        if ($securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_ALL')) {
             $user = $this
                 ->getConfigurationPool()
                 ->getContainer()
