@@ -9,6 +9,7 @@ use AppBundle\Entity\ClientFieldValue;
 use AppBundle\Entity\MenuItem;
 use AppBundle\Form\DataTransformer\ImageStringToFileTransformer;
 use AppBundle\Form\Type\AppHomelessFromDateType;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -203,7 +204,7 @@ class ClientAdmin extends BaseAdmin
                     /** @var $clientsField ClientField */
                     if ($clientsField->getMandatoryForHomeless()) {
                         $fieldForm = $event->getForm()->get('additionalField' . $clientsField->getCode());
-                        if (!$fieldForm->getData()) {
+                        if (!$fieldForm->getData() || ($fieldForm->getData() instanceof ArrayCollection && $fieldForm->getData()->count() === 0)) {
                             $event->getForm()->get('additionalField' . $clientsField->getCode())->addError(new FormError('Поле обязательное для заполнения'));
                         }
                     }
