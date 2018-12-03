@@ -86,7 +86,7 @@ class ClientAdmin extends BaseAdmin
             ->end();
 
         $securityContext = $this->getConfigurationPool()->getContainer()->get('security.context');
-        if ($securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_ALL')) {
             $showMapper
                 ->with('Последние услуги', ['class' => 'col-md-4'])
                 ->add('services', 'array', [
@@ -97,7 +97,7 @@ class ClientAdmin extends BaseAdmin
         }
 
 
-        if ($securityContext->isGranted('ROLE_APP_NOTE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_ALL')) {
             $showMapper
                 ->with('Последние примечания')
                 ->add('notes', 'array', [
@@ -107,7 +107,7 @@ class ClientAdmin extends BaseAdmin
                 ->end();
         }
 
-        if ($securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_EDIT') || $securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_EDIT') || $securityContext->isGranted('ROLE_APP_CLIENT_ADMIN_ALL')) {
             $showMapper
                 ->with('Дополнительная информация', [
                     'class' => 'col-md-12',
@@ -799,28 +799,28 @@ class ClientAdmin extends BaseAdmin
 
         $securityContext = $this->getConfigurationPool()->getContainer()->get('security.context');
 
-        if ($securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_ADMIN_ALL')) {
             $menu->addChild(
                 'Документы',
                 ['uri' => $admin->generateUrl('app.document.admin.list', ['id' => $id])]
             );
         }
 
-        if ($securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_DOCUMENT_FILE_ADMIN_ALL')) {
             $menu->addChild(
                 'Файлы',
                 ['uri' => $admin->generateUrl('app.document_file.admin.list', ['id' => $id])]
             );
         }
 
-        if ($securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CONTRACT_ADMIN_ALL')) {
             $menu->addChild(
                 'Сервисные планы',
                 ['uri' => $admin->generateUrl('app.contract.admin.list', ['id' => $id])]
             );
         }
 
-        if ($securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SHELTER_HISTORY_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
                 $menu->addChild(
                     'Проживание в приюте',
@@ -829,7 +829,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('certificate')) {
                 $menu->addChild(
                     'Выдать справку',
@@ -838,7 +838,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_GENERATED_DOCUMENT_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('generated_document')) {
                 $menu->addChild(
                     'Построить документ',
@@ -847,7 +847,7 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
-        if ($securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_ALL')) {
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTICE_ADMIN_ALL')) {
             $user = $this
                 ->getConfigurationPool()
                 ->getContainer()
