@@ -69,7 +69,8 @@ class ClientAdmin extends BaseAdmin
                 'label' => 'Место рождения',
             ])
             ->add('isHomeless', null, [
-                'label' => 'Бездомный',
+                'label' => 'Статус',
+                'template' => '/admin/fields/client_notIsHomeless.html.twig'
             ])
             ->add('createdAt', 'date', [
                 'label' => 'Дата добавления',
@@ -266,8 +267,8 @@ class ClientAdmin extends BaseAdmin
                 'label' => 'Место рождения',
                 'required' => true,
             ])
-            ->add('isHomeless', CheckboxType::class, [
-                'label' => 'Бездомный',
+            ->add('notIsHomeless', CheckboxType::class, [
+                'label' => 'Не бездомный',
                 'label_attr'=> ['class'=> 'changeSelectinsData'],
                 'required' => false,
             ])

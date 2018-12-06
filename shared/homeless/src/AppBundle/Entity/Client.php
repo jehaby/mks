@@ -70,7 +70,7 @@ class Client extends BaseEntity
      * Фамилия
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $isHomeless = false;
+    private $isHomeless = true;
 
     /**
      * Место последнего проживания
@@ -941,6 +941,30 @@ class Client extends BaseEntity
     public function setIsHomeless($isHomeless)
     {
         $this->isHomeless = $isHomeless;
+
+        return $this;
+    }
+
+    /**
+     * Get NotIsHomeless
+     *
+     * @return mixed
+     */
+    public function getNotIsHomeless()
+    {
+        return !$this->isHomeless;
+    }
+
+    /**
+     * Set notIsHomeless
+     *
+     * @param mixed $notIsHomeless
+     *
+     * @return Client
+     */
+    public function setNotIsHomeless($notIsHomeless)
+    {
+        $this->isHomeless = !$notIsHomeless;
 
         return $this;
     }
