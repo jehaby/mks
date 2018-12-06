@@ -15,6 +15,7 @@ use AppBundle\Entity\MenuItem;
 use AppBundle\Entity\Note;
 use AppBundle\Entity\Service;
 use AppBundle\Entity\ShelterHistory;
+use AppBundle\Entity\Notice;
 use AppBundle\Form\DataTransformer\ImageStringToFileTransformer;
 use AppBundle\Form\Type\AppHomelessFromDateType;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -858,6 +859,15 @@ class ClientAdmin extends BaseAdmin
             }
         }
 
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_RESIDENT_QUESTIONNAIRE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_RESIDENT_QUESTIONNAIRE_ADMIN_ALL')) {
+            if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
+                $menu->addChild(
+                    'Анкета проживающего',
+                    ['uri' => $admin->generateUrl('app.resident_questionnaire.admin.list', ['id' => $id])]
+                );
+            }
+        }
+
         if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_CERTIFICATE_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('certificate')) {
                 $menu->addChild(
@@ -884,20 +894,20 @@ class ClientAdmin extends BaseAdmin
                 ->getToken()
                 ->getUser();
 
-            $noticesCount = $this
-                ->getConfigurationPool()
+        $noticesCount = $this
+            ->getConfigurationPool()
+            ->getContainer()
+            ->get('doctrine.orm.entity_manager')
+            ->getRepository(Notice::class)
+            ->getUnviewedCount($this->getSubject(), $user);
+
+        $noticesCount += count(
+            $this->getConfigurationPool()
                 ->getContainer()
                 ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:Notice')
-                ->getUnviewedCount($this->getSubject(), $user);
-
-            $noticesCount += count(
-                $this->getConfigurationPool()
-                    ->getContainer()
-                    ->get('doctrine.orm.entity_manager')
-                    ->getRepository('AppBundle:Notice')
-                    ->getAutoNotices($this->getSubject())
-            );
+                ->getRepository(Notice::class)
+                ->getAutoNotices($this->getSubject())
+        );
 
             $menu->addChild(
                 'Напоминания' . ($noticesCount > 0 ? " ($noticesCount)" : ''),
