@@ -100,16 +100,6 @@
 
 {% block side_bar_nav %}
     {{ block('side_bar_nav', 'SonataAdminBundle::standard_layout.html.twig') }}
-
-    <ul class="sidebar-menu">
-        <li class="treeview">
-            <a href="{{ path('report') }}">
-                <i class="fa fa-file-text"></i>
-                <span>Отчёты</span>
-                <span class="pull-right-container"></span>
-            </a>
-        </li>
-    </ul>
     {% if app.user and (app.user.viewedClients is not empty) %}
         <br/><br/><br/>
         <ul class="sidebar-menu">
