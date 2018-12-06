@@ -16,9 +16,6 @@
                         $(item).text('Нет ответа')
                     }
                 });
-                $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
-                    $(item).addClass('required');
-                });
             } else {
                 $('.select2-result-label,.select2-chosen').each(function(key, item) {
                     if ($(item).text() === 'Нет ответа') {
@@ -29,6 +26,9 @@
                     if ($(item).text() === 'Нет ответа') {
                         $(item).text('Не отвечает')
                     }
+                });
+                $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
+                    $(item).addClass('required');
                 });
             }
             $('.changeSelectinsData, .changeSelectinsData .iCheck-helper').on('click', function (event) {
@@ -44,7 +44,7 @@
                         }
                     });
                     $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
-                        $(item).addClass('required');
+                        $(item).removeClass('required');
                     });
                 } else {
                     $('.select2-result-label,.select2-chosen').each(function(key, item) {
@@ -58,7 +58,7 @@
                         }
                     });
                     $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
-                        $(item).removeClass('required');
+                        $(item).addClass('required');
                     });
                 }
             })
