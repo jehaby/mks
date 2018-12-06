@@ -13,6 +13,7 @@ class ReportService
     const OUTGOING = 'outgoing';
     const RESULTS_OF_SUPPORT = 'results_of_support';
     const ACCOMPANYING = 'accompanying';
+    const AGGREGATED = 'aggregated';
 
     private $em;
     private $doc;
@@ -27,7 +28,8 @@ class ReportService
         $this->doc = new \PHPExcel();
     }
 
-    public function getTypes(){
+    public function getTypes()
+    {
         return [
             static::ONE_OFF_SERVICES => 'Отчет о предоставленных разовых услугах',
             static::ONE_OFF_SERVICES_USERS => 'Отчет о предоставленных разовых услугах по сотрудникам',
@@ -36,6 +38,7 @@ class ReportService
             static::OUTGOING => 'Отчет о выбывших из приюта',
             static::RESULTS_OF_SUPPORT => 'Отчет по результатам сопровождения ',
             static::ACCOMPANYING => 'Отчет по сопровождению',
+            static::AGGREGATED => 'Отчет агрегированный',
         ];
     }
 
@@ -44,12 +47,19 @@ class ReportService
      * @param null $dateFrom
      * @param null $dateTo
      * @param null $userId
+     * @param null $createClientdateFrom
+     * @param null $createClientFromTo
+     * @param null $createServicedateFrom
+     * @param null $createServiceFromTo
+     * @param null $homelessReason
+     * @param null $disease
+     * @param null $breadwinner
      * @throws \Doctrine\DBAL\DBALException
      * @throws \PHPExcel_Exception
      * @throws \PHPExcel_Reader_Exception
      * @throws \PHPExcel_Writer_Exception
      */
-    public function generate($type, $dateFrom = null, $dateTo = null, $userId = null)
+    public function generate($type, $dateFrom = null, $dateTo = null, $userId = null, $createClientdateFrom = null, $createClientFromTo = null, $createServicedateFrom = null, $createServiceFromTo = null, $homelessReason = null, $disease = null, $breadwinner = null)
     {
         if ($dateFrom) {
             $date = new \DateTime();
@@ -93,11 +103,15 @@ class ReportService
             case static::ACCOMPANYING:
                 $result = $this->accompanying($userId);
                 break;
+
+            case static::AGGREGATED:
+                $result = $this->aggregated($createClientdateFrom, $createClientFromTo, $createServicedateFrom, $createServiceFromTo, $homelessReason, $disease, $breadwinner);
+                break;
         }
 
         $this->doc->getActiveSheet()->fromArray($result, null, 'A2');
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="'.$type.'.xls"');
+        header('Content-Disposition: attachment;filename="' . $type . '.xls"');
         header('Cache-Control: max-age=0');
         $writer = \PHPExcel_IOFactory::createWriter($this->doc, 'Excel5');
         $writer->save('php://output');
@@ -353,6 +367,164 @@ class ReportService
             $parameters[':userId'] = $userId;
         }
         $stmt->execute($parameters);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * @param null $userId
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \PHPExcel_Exception
+     */
+    private function aggregated($createClientdateFrom = null, $createClientFromTo = null, $createServicedateFrom = null, $createServiceFromTo = null, $homelessReason = null, $disease = null, $breadwinner = null)
+    {
+
+        $this->doc->getActiveSheet()->fromArray([[
+            'Вопрос',
+            'Ответ',
+            'Количество',
+        ]], null, 'A1');
+        $clientsIds = null;
+        if ($homelessReason || $disease || $breadwinner) {
+            $clientsIds = [];
+            if ($disease) {
+                $stmt = $this->em->getConnection()->prepare('SELECT c.id
+FROM client c
+LEFT JOIN client_field_value cfv ON c.id = cfv.client_id
+LEFT JOIN client_field_value_client_field_option cfvcfo on cfv.id = cfvcfo.client_field_value_id
+LEFT JOIN client_field cf ON cfv.field_id = cf.id
+WHERE cf.code = \'disease\' AND cfvcfo.client_field_option_id IN (' . implode(',', $disease) . ')');
+                $stmt->execute();
+                foreach ($stmt->fetchAll() as $item) {
+                    if (!isset($clientsIds[$item['id']])) {
+                        $clientsIds[$item['id']] = 0;
+                    }
+                    $clientsIds[$item['id']]++;
+                }
+            }
+            if ($homelessReason) {
+                $stmt = $this->em->getConnection()->prepare('SELECT c.id
+FROM client c
+LEFT JOIN client_field_value cfv ON c.id = cfv.client_id
+LEFT JOIN client_field_value_client_field_option cfvcfo on cfv.id = cfvcfo.client_field_value_id
+LEFT JOIN client_field cf ON cfv.field_id = cf.id
+WHERE cf.code = \'homelessReason\' AND cfvcfo.client_field_option_id IN (' . implode(',', $homelessReason) . ')');
+                $stmt->execute();
+                foreach ($stmt->fetchAll() as $item) {
+                    if (!isset($clientsIds[$item['id']])) {
+                        $clientsIds[$item['id']] = 0;
+                    }
+                    $clientsIds[$item['id']]++;
+                }
+            }
+            if ($breadwinner) {
+                $stmt = $this->em->getConnection()->prepare('SELECT c.id
+FROM client c
+LEFT JOIN client_field_value cfv ON c.id = cfv.client_id
+LEFT JOIN client_field_value_client_field_option cfvcfo on cfv.id = cfvcfo.client_field_value_id
+LEFT JOIN client_field cf ON cfv.field_id = cf.id
+WHERE cf.code = \'breadwinner\' AND cfvcfo.client_field_option_id IN (' . implode(',', $breadwinner) . ')');
+                $stmt->execute();
+                foreach ($stmt->fetchAll() as $item) {
+                    if (!isset($clientsIds[$item['id']])) {
+                        $clientsIds[$item['id']] = 0;
+                    }
+                    $clientsIds[$item['id']]++;
+                }
+            }
+            $max = max($clientsIds);
+            foreach ($clientsIds as $clientsId => $value) {
+                if ($value !== $max) {
+                    unset($clientsIds[$clientsId]);
+                }
+            }
+            $clientsIds = array_keys($clientsIds);
+        }
+        if ($clientsIds === []) {
+            return [];
+        }
+        $stmt = $this->em->getConnection()->prepare('SELECT c.id
+            FROM client c
+            LEFT JOIN contract con ON con.client_id = c.id
+            LEFT JOIN contract_item ci1 ON con.id = ci1.contract_id AND ci1.date IS NOT NULL
+            LEFT JOIN contract_item_type cit1 ON ci1.type_id = cit1.id
+            LEFT JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
+            LEFT JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
+            JOIN contract_status cs ON con.status_id = cs.id
+            WHERE con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo AND 
+                  c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo ' .
+            ($clientsIds !== null ? 'AND c.id IN (' . implode(',', $clientsIds) . ')' : '')
+        );
+        $parameters = [
+            ':createServicedateFrom' => $createServicedateFrom ? date('Y-m-d', strtotime($createServicedateFrom)) : '2000-01-01',
+            ':createServiceFromTo' => $createServiceFromTo ? date('Y-m-d', strtotime($createServiceFromTo)) : date('Y-m-d'),
+            ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '2000-01-01',
+            ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
+        ];
+        $stmt->execute($parameters);
+        $clientsIds = [];
+        foreach ($stmt->fetchAll() as $item) {
+            $clientsIds[] = $item['id'];
+        }
+        $clientsIds = array_unique($clientsIds);
+        if (!$clientsIds) {
+            return [];
+        }
+        $stmt = $this->em->getConnection()->prepare('(
+  SELECT \'Количество\', \'Общее\', COUNT(*)
+  FROM client c
+  WHERE c.id IN (' . implode(',', $clientsIds) . ')
+)
+union
+(
+  SELECT \'Количество\', \'Мужчин\', COUNT(*)
+  FROM client c
+  WHERE c.id IN (' . implode(',', $clientsIds) . ') AND c.gender = 1
+)
+union
+(
+  SELECT \'Количество\', \'Женщин\', COUNT(*)
+  FROM client c
+  WHERE c.id IN (' . implode(',', $clientsIds) . ') AND c.gender = 2
+)
+union
+(
+  SELECT \'Средний\', \'Возраст\', CAST(AVG(TIMESTAMPDIFF(YEAR,c.birth_date,curdate())) AS UNSIGNED)
+  FROM client c
+  WHERE c.id IN (' . implode(',', $clientsIds) . ')
+)
+union
+(
+  SELECT \'Средний\', \'Стаж бездомности\', CAST(AVG(TIMESTAMPDIFF(YEAR,cfv.datetime,curdate())) AS UNSIGNED)
+  FROM client c
+  JOIN client_field cf ON cf.code = \'homelessFrom\'
+  JOIN client_field_value cfv ON c.id = cfv.client_id AND cfv.field_id = cf.id
+  WHERE c.id IN (' . implode(',', $clientsIds) . ')
+)
+union
+(
+  SELECT cf.name, cfo.name, COUNT(*)
+  FROM client c
+  JOIN client_field_value cfv ON c.id = cfv.client_id AND cfv.option_id IS NULL AND cfv.datetime IS NULL AND cfv.text IS NULL
+  JOIN client_field cf ON cfv.field_id = cf.id
+  JOIN client_field_value_client_field_option cfvcfo on cfv.id = cfvcfo.client_field_value_id
+  JOIN client_field_option cfo on cfvcfo.client_field_option_id = cfo.id
+  WHERE c.id IN (' . implode(',', $clientsIds) . ')
+  GROUP BY cf.name
+      , cfo.name
+)
+union
+(
+  SELECT cf.name, cfo.name, COUNT(*)
+  FROM client c
+  JOIN client_field_value cfv ON c.id = cfv.client_id AND cfv.option_id IS NOT NULL
+  JOIN client_field cf ON cfv.field_id = cf.id
+  JOIN client_field_option cfo on cfv.option_id = cfo.id
+  WHERE c.id IN (' . implode(',', $clientsIds) . ')
+  GROUP BY cf.name
+      , cfo.name
+)');
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 }
