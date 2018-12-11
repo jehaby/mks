@@ -14,6 +14,7 @@ class ReportService
     const RESULTS_OF_SUPPORT = 'results_of_support';
     const ACCOMPANYING = 'accompanying';
     const AGGREGATED = 'aggregated';
+    const AVERAGE_COMPLETED_ITEMS = 'average_completed_items';
 
     private $em;
     private $doc;
@@ -38,6 +39,7 @@ class ReportService
             static::OUTGOING => 'Отчет о выбывших из приюта',
             static::RESULTS_OF_SUPPORT => 'Отчет по результатам сопровождения ',
             static::ACCOMPANYING => 'Отчет по сопровождению',
+            static::AVERAGE_COMPLETED_ITEMS => 'Отчет по средней длительности пунктов сервисных планов',
             static::AGGREGATED => 'Отчет агрегированный',
         ];
     }
@@ -79,29 +81,26 @@ class ReportService
             case static::ONE_OFF_SERVICES:
                 $result = $this->oneOffServices($dateFrom, $dateTo, $userId);
                 break;
-
             case static::ONE_OFF_SERVICES_USERS:
                 $result = $this->oneOffServicesUsers($dateFrom, $dateTo, $userId);
                 break;
-
             case static::COMPLETED_ITEMS:
                 $result = $this->completedItems($dateFrom, $dateTo, $userId);
                 break;
-
             case static::COMPLETED_ITEMS_USERS:
                 $result = $this->completedItemsUsers($dateFrom, $dateTo, $userId);
                 break;
-
             case static::OUTGOING:
                 $result = $this->outgoing($dateFrom, $dateTo, $userId);
                 break;
-
             case static::RESULTS_OF_SUPPORT:
                 $result = $this->resultsOfSupport($dateFrom, $dateTo, $userId);
                 break;
-
             case static::ACCOMPANYING:
                 $result = $this->accompanying($userId);
+                break;
+            case static::AVERAGE_COMPLETED_ITEMS:
+                $result = $this->averageCompletedItems($dateFrom, $dateTo, $userId);
                 break;
 
             case static::AGGREGATED:
@@ -363,6 +362,40 @@ class ReportService
             GROUP BY con.id
             ORDER BY con.date_to DESC');
         $parameters = [];
+        if ($userId) {
+            $parameters[':userId'] = $userId;
+        }
+        $stmt->execute($parameters);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * @param null $dateFrom
+     * @param null $dateTo
+     * @param null $userId
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \PHPExcel_Exception
+     */
+    private function averageCompletedItems($dateFrom = null, $dateTo = null, $userId = null)
+    {
+        $this->doc->getActiveSheet()->fromArray([[
+            'название пункта',
+            'средняя длительность',
+        ]], null, 'A1');
+        $stmt = $this->em->getConnection()->prepare('SELECT 
+                cit.name, 
+                FLOOR(AVG (TO_DAYS(c.date_to) - TO_DAYS(c.date_from))) avg_days
+            FROM contract_item i
+            JOIN contract c ON i.contract_id = c.id
+            JOIN contract_item_type cit ON i.type_id = cit.id
+            WHERE i.date >= :dateFrom AND i.date <= :dateTo ' . ($userId ? 'AND ((i.created_by_id IS NOT NULL AND i.created_by_id = :userId) OR (i.created_by_id IS NULL AND c.created_by_id = :userId))' : '') . '
+            GROUP BY cit.name
+            ORDER BY cit.name');
+        $parameters = [
+            ':dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            ':dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
+        ];
         if ($userId) {
             $parameters[':userId'] = $userId;
         }
