@@ -3,13 +3,16 @@
 {% block field %}
     {% if object.filename %}
         <p>
-
-            <iframe
-                    src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))}}&amp;embedded=true
-                    width="800px"
-                    height="400px"
-                    style="border: none;">
-            </iframe>
+            {% if '.png' in object.filename or '.gif' in object.filename or '.jpg' in object.filename or '.jpeg' in object.filename %}
+                <img src="{{ vich_uploader_asset(object, 'file') }}" width="400px"/>
+            {% else %}
+                <iframe
+                        src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|url_encode}}&amp;embedded=true
+                        width="800px"
+                        height="400px"
+                        style="border: none;">
+                </iframe>
+            {% endif %}
         </p>
         <p>
             <a href="{{ vich_uploader_asset(object, 'file') }}" download>{{ object.filename }}</a>
