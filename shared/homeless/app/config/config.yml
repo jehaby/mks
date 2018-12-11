@@ -188,16 +188,6 @@ sonata_admin:
                       - sonata.user.admin.group
                  roles:
                       [ROLE_ADMIN]
-             app.report:
-                 label: Отчёты
-                 icon: '<i class="fa fa-file-text"></i>'
-                 items:
-                     - route: report
-                       label: 'Отчёты'
-                       roles:
-                         [ROLE_SONATA_USER_ADMIN_USER_EDIT, ROLE_ADMIN]
-                 roles:
-                      [ROLE_SONATA_USER_ADMIN_USER_EDIT, ROLE_ADMIN]
 sonata_user:
     security_acl: false
     manager_type: orm # can be orm or mongodb
