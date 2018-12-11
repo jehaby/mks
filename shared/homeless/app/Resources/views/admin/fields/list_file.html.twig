@@ -7,7 +7,7 @@
                 <img src="{{ vich_uploader_asset(object, 'file') }}" width="400px"/>
             {% else %}
                 <iframe
-                        src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|replace({' ': '%20'}) }}&amp;embedded=true
+                        src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|replace({' ': '%20', '/app_dev.php': ''}) }}&amp;embedded=true
                         width="800px"
                         height="400px"
                         style="border: none;">
