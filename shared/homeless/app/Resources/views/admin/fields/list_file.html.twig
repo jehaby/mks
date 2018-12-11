@@ -5,7 +5,7 @@
         <p>
 
             <iframe
-                    src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))}}&amp;embedded=true
+                    src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|url_encode}}&amp;embedded=true
                     width="800px"
                     height="400px"
                     style="border: none;">
