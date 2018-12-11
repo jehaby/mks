@@ -8,7 +8,7 @@ use Symfony\Component\Form\Extension\Core\Type\BirthdayType;
 
 /**
  * Дополнительное поле клиента
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ClientFieldRepository")
  */
 class ClientField extends BaseEntity
 {
@@ -49,6 +49,12 @@ class ClientField extends BaseEntity
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $enabled = true;
+
+    /**
+     * Включено для бездомных
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $enabledForHomeless = true;
 
     /**
      * Тип
@@ -376,7 +382,7 @@ class ClientField extends BaseEntity
      */
     public function getMandatoryForHomeless()
     {
-        return $this->mandatoryForHomeless;
+        return $this->mandatoryForHomeless || $this->required;
     }
 
     /**
@@ -386,6 +392,30 @@ class ClientField extends BaseEntity
     public function setMandatoryForHomeless($mandatoryForHomeless)
     {
         $this->mandatoryForHomeless = $mandatoryForHomeless;
+
+        return $this;
+    }
+
+    /**
+     * Get enabledForHomeless
+     *
+     * @return mixed
+     */
+    public function getEnabledForHomeless()
+    {
+        return $this->enabledForHomeless || $this->enabled;
+    }
+
+    /**
+     * Set enabledForHomeless
+     *
+     * @param mixed $enabledForHomeless
+     *
+     * @return ClientField
+     */
+    public function setEnabledForHomeless($enabledForHomeless)
+    {
+        $this->enabledForHomeless = $enabledForHomeless;
 
         return $this;
     }

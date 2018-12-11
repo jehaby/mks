@@ -16,6 +16,7 @@
                         $(item).text('Нет ответа')
                     }
                 });
+                $('.enabled-for-homeless').parent().parent().hide();
             } else {
                 $('.select2-result-label,.select2-chosen').each(function(key, item) {
                     if ($(item).text() === 'Нет ответа') {
@@ -30,6 +31,7 @@
                 $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
                     $(item).addClass('required');
                 });
+                $('.enabled-for-homeless').parent().parent().show();
             }
             $('.changeSelectinsData, .changeSelectinsData .iCheck-helper').on('click', function (event) {
                 if ($(event.currentTarget).parents('.form-group').find('[type="checkbox"]').prop('checked')) {
@@ -46,6 +48,7 @@
                     $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
                         $(item).removeClass('required');
                     });
+                    $('.enabled-for-homeless').parent().parent().hide();
                 } else {
                     $('.select2-result-label,.select2-chosen').each(function(key, item) {
                         if ($(item).text() === 'Нет ответа') {
@@ -60,6 +63,7 @@
                     $('.mandatory-for-homeless').parent().parent().children('label').each(function (key, item) {
                         $(item).addClass('required');
                     });
+                    $('.enabled-for-homeless').parent().parent().show();
                 }
             })
         });

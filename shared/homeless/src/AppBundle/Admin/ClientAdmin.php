@@ -124,7 +124,7 @@ class ClientAdmin extends BaseAdmin
                 ->getConfigurationPool()
                 ->getContainer()
                 ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:ClientFieldValue')
+                ->getRepository(ClientFieldValue::class)
                 ->findByClient($this->getSubject());
 
             $blankTabName = '    ';
@@ -297,18 +297,19 @@ class ClientAdmin extends BaseAdmin
         $formMapper
             ->with('Дополнительная информация');
 
+        /** @var ClientField[] $fields */
         $fields = $this
             ->getConfigurationPool()
             ->getContainer()
             ->get('doctrine.orm.entity_manager')
-            ->getRepository('AppBundle:ClientField')
-            ->findBy(['enabled' => true], ['sort' => 'ASC']);
+            ->getRepository(ClientField::class)
+            ->findByEnabledAll();
 
         foreach ($fields as $field) {
             $options = [
                 'label' => $field->getName(),
                 'required' => $field->getRequired(),
-                'attr' => ["class" => $field->getMandatoryForHomeless() ? 'mandatory-for-homeless' : '']
+                'attr' => ["class" => ($field->getMandatoryForHomeless() ? 'mandatory-for-homeless' : '') . ' ' . (!$field->getEnabled() && $field->getEnabledForHomeless() ? 'enabled-for-homeless' : '')]
             ];
 
             switch ($field->getType()) {
