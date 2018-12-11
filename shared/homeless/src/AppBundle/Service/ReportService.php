@@ -358,7 +358,7 @@ class ReportService
               GROUP_CONCAT(CONCAT(cit1.name, \'(\' , ci1.comment, \')\')), 
               cs.name,  
               con.comment, 
-              TO_DAYS(con.date_to) - TO_DAYS(con.date_from),
+              TO_DAYS(ci1.date) - TO_DAYS(ci1.date_start),
               concat(u.lastname, \' \', u.firstname, \' \', u.middlename)
             FROM contract con
             JOIN fos_user_user u ON con.created_by_id = u.id
