@@ -877,8 +877,8 @@
                                                     </script>
                                                 </div>
                                             </div>
-
-
+                                        </div>
+                                        <div id="type-aggregated2" style="display: none">
                                             <div class="form-group" id="sonata-ba-field-container-s5a37cdd74da55_homelessReason">
                                                 <label class="control-label" for="s5a37cdd74da55_homelessReason">
                                                     Причины бездомности
@@ -970,11 +970,17 @@
     <script>
       function changeType() {
         if ($('#s5a37cdd74da55_type').val() === 'aggregated') {
-          $('#type-default').hide();
-          $('#type-aggregated').show();
+            $('#type-default').hide();
+            $('#type-aggregated2').hide();
+            $('#type-aggregated').show();
+        } else if ($('#s5a37cdd74da55_type').val() === 'aggregated2') {
+            $('#type-default').hide();
+            $('#type-aggregated').hide();
+            $('#type-aggregated2').show();
         } else {
-          $('#type-default').show();
-          $('#type-aggregated').hide();
+            $('#type-default').show();
+            $('#type-aggregated').hide();
+            $('#type-aggregated2').hide();
         }
       }
     </script>
