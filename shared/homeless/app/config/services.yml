@@ -36,6 +36,7 @@ services:
           - [addChild, ['@app.document_file.admin']]
           - [addChild, ['@app.contract.admin']]
           - [addChild, ['@app.shelter_history.admin']]
+          - [addChild, ['@app.resident_questionnaire.admin']]
           - [addChild, ['@app.certificate.admin']]
           - [addChild, ['@app.contract.admin']]
           - [addChild, ['@app.generated_document.admin']]
@@ -123,6 +124,14 @@ services:
       tags:
           - { name: sonata.admin, manager_type: orm, label: 'Сервисные планы' }
       arguments: [null, AppBundle\Entity\Contract, AppBundle:CRUD]
+      calls:
+          - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
+
+  app.resident_questionnaire.admin:
+      class: AppBundle\Admin\ResidentQuestionnaireAdmin
+      tags:
+          - { name: sonata.admin, manager_type: orm, label: 'Анкета проживающего' }
+      arguments: [null, AppBundle\Entity\ResidentQuestionnaire, AppBundle:CRUD]
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 

@@ -7,6 +7,7 @@ use AppBundle\Entity\ClientField;
 use AppBundle\Entity\ClientFieldOption;
 use AppBundle\Entity\ClientFieldValue;
 use AppBundle\Entity\MenuItem;
+use AppBundle\Entity\Notice;
 use AppBundle\Form\DataTransformer\ImageStringToFileTransformer;
 use AppBundle\Form\Type\AppHomelessFromDateType;
 use Doctrine\ORM\EntityRepository;
@@ -803,6 +804,15 @@ class ClientAdmin extends BaseAdmin
             );
         }
 
+        if ($this->isGranted('shelter_history')) {
+            if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
+                $menu->addChild(
+                    'Анкета проживающего',
+                    ['uri' => $admin->generateUrl('app.resident_questionnaire.admin.list', ['id' => $id])]
+                );
+            }
+        }
+
         if ($this->isMenuItemEnabled('certificate')) {
             $menu->addChild(
                 'Выдать справку',
@@ -828,14 +838,14 @@ class ClientAdmin extends BaseAdmin
             ->getConfigurationPool()
             ->getContainer()
             ->get('doctrine.orm.entity_manager')
-            ->getRepository('AppBundle:Notice')
+            ->getRepository(Notice::class)
             ->getUnviewedCount($this->getSubject(), $user);
 
         $noticesCount += count(
             $this->getConfigurationPool()
                 ->getContainer()
                 ->get('doctrine.orm.entity_manager')
-                ->getRepository('AppBundle:Notice')
+                ->getRepository(Notice::class)
                 ->getAutoNotices($this->getSubject())
         );
 
