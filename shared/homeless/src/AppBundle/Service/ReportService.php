@@ -111,7 +111,7 @@ class ReportService
                 break;
 
             case static::AGGREGATED2:
-                $result = $this->aggregated2($homelessReason, $disease, $breadwinner);
+                $result = $this->aggregated2($createClientdateFrom, $createClientFromTo, $createServicedateFrom, $createServiceFromTo, $homelessReason, $disease, $breadwinner);
                 break;
         }
 
@@ -144,7 +144,7 @@ class ReportService
             GROUP BY s.type
             ORDER BY st.sort');
         $parameters = [
-            'dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            'dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             'dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -177,7 +177,7 @@ class ReportService
             GROUP BY u.id, s.type_id
             ORDER BY st.sort');
         $parameters = [
-            'dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            'dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             'dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -210,7 +210,7 @@ class ReportService
             GROUP BY i.type_id
             ORDER BY cit.sort');
         $parameters = [
-            ':dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            ':dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             ':dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -244,7 +244,7 @@ class ReportService
             GROUP BY i.type_id, u.id
             ORDER BY i.id, cit.sort');
         $parameters = [
-            ':dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            ':dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             ':dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -289,7 +289,7 @@ class ReportService
             GROUP BY con.id
             ORDER BY h.date_to DESC');
         $parameters = [
-            ':dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            ':dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             ':dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -332,7 +332,7 @@ class ReportService
             GROUP BY con.id
             ORDER BY con.date_to DESC');
         $parameters = [
-            ':dateFrom' => $dateFrom ? $dateFrom : '2000-01-01',
+            ':dateFrom' => $dateFrom ? $dateFrom : '1960-01-01',
             ':dateTo' => $dateTo ? $dateTo : date('Y-m-d'),
         ];
         if ($userId) {
@@ -394,24 +394,35 @@ class ReportService
             'Количество',
         ]], null, 'A1');
         $clientsIds = null;
-        $stmt = $this->em->getConnection()->prepare('SELECT c.id
+        if ($createServicedateFrom || $createServiceFromTo) {
+            $stmt = $this->em->getConnection()->prepare('SELECT c.id
             FROM client c
-            LEFT JOIN contract con ON con.client_id = c.id
-            LEFT JOIN contract_item ci1 ON con.id = ci1.contract_id AND ci1.date IS NOT NULL
-            LEFT JOIN contract_item_type cit1 ON ci1.type_id = cit1.id
-            LEFT JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
-            LEFT JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
+            JOIN contract con ON con.client_id = c.id
+            JOIN contract_item ci1 ON con.id = ci1.contract_id AND ci1.date IS NOT NULL
+            JOIN contract_item_type cit1 ON ci1.type_id = cit1.id
+            JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
+            JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
             JOIN contract_status cs ON con.status_id = cs.id
-            WHERE con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo AND 
-                  c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo ' .
-            ($clientsIds !== null ? 'AND c.id IN (' . implode(',', $clientsIds) . ')' : '')
-        );
-        $parameters = [
-            ':createServicedateFrom' => $createServicedateFrom ? date('Y-m-d', strtotime($createServicedateFrom)) : '2000-01-01',
-            ':createServiceFromTo' => $createServiceFromTo ? date('Y-m-d', strtotime($createServiceFromTo)) : date('Y-m-d'),
-            ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '2000-01-01',
-            ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
-        ];
+            WHERE con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo AND
+                  c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo '
+            );
+            $parameters = [
+                ':createServicedateFrom' => $createServicedateFrom ? date('Y-m-d', strtotime($createServicedateFrom)) : '1960-01-01',
+                ':createServiceFromTo' => $createServiceFromTo ? date('Y-m-d', strtotime($createServiceFromTo)) : date('Y-m-d'),
+                ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '1960-01-01',
+                ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
+            ];
+        } else {
+            $stmt = $this->em->getConnection()->prepare('SELECT c.id
+            FROM client c
+            WHERE c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo '
+            );
+            $parameters = [
+                ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '1960-01-01',
+                ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
+            ];
+        }
+
         $stmt->execute($parameters);
         $clientsIds = [];
         foreach ($stmt->fetchAll() as $item) {
@@ -506,20 +517,60 @@ union
     }
 
     /**
-     * @param null $userId
+     * @param null $createClientdateFrom
+     * @param null $createClientFromTo
+     * @param null $createServicedateFrom
+     * @param null $createServiceFromTo
+     * @param null $homelessReason
+     * @param null $disease
+     * @param null $breadwinner
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      * @throws \PHPExcel_Exception
      */
-    private function aggregated2($homelessReason = null, $disease = null, $breadwinner = null)
+    private function aggregated2($createClientdateFrom = null, $createClientFromTo = null, $createServicedateFrom = null, $createServiceFromTo = null, $homelessReason = null, $disease = null, $breadwinner = null)
     {
 
         $this->doc->getActiveSheet()->fromArray([[
             'Количество',
         ]], null, 'A1');
-        $clientsIds = null;
+        if ($createServicedateFrom || $createServiceFromTo) {
+            $stmt = $this->em->getConnection()->prepare('SELECT c.id
+            FROM client c
+            JOIN contract con ON con.client_id = c.id
+            JOIN contract_item ci1 ON con.id = ci1.contract_id AND ci1.date IS NOT NULL
+            JOIN contract_item_type cit1 ON ci1.type_id = cit1.id
+            JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
+            JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
+            JOIN contract_status cs ON con.status_id = cs.id
+            WHERE con.date_to >= :createServicedateFrom AND con.date_to <= :createServiceFromTo AND
+                  c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo '
+            );
+            $parameters = [
+                ':createServicedateFrom' => $createServicedateFrom ? date('Y-m-d', strtotime($createServicedateFrom)) : '1960-01-01',
+                ':createServiceFromTo' => $createServiceFromTo ? date('Y-m-d', strtotime($createServiceFromTo)) : date('Y-m-d'),
+                ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '1960-01-01',
+                ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
+            ];
+        } else {
+            $stmt = $this->em->getConnection()->prepare('SELECT c.id
+            FROM client c
+            WHERE c.created_at >= :createClientdateFrom AND c.created_at <= :createClientFromTo '
+            );
+            $parameters = [
+                ':createClientdateFrom' => $createClientdateFrom ? date('Y-m-d', strtotime($createClientdateFrom)) : '1960-01-01',
+                ':createClientFromTo' => $createClientFromTo ? date('Y-m-d', strtotime($createClientFromTo)) : date('Y-m-d'),
+            ];
+        }
+        $stmt->execute($parameters);
+        $clientsIds = [];
+        foreach ($stmt->fetchAll() as $item) {
+            $clientsIds[$item['id']] = 0;
+        }
+        if (!$clientsIds) {
+            return [];
+        }
         if ($homelessReason || $disease || $breadwinner) {
-            $clientsIds = [];
             if ($disease) {
                 $stmt = $this->em->getConnection()->prepare('SELECT c.id
 FROM client c
@@ -530,7 +581,7 @@ WHERE cf.code = \'disease\' AND cfvcfo.client_field_option_id IN (' . implode(',
                 $stmt->execute();
                 foreach ($stmt->fetchAll() as $item) {
                     if (!isset($clientsIds[$item['id']])) {
-                        $clientsIds[$item['id']] = 0;
+                        continue;
                     }
                     $clientsIds[$item['id']]++;
                 }
@@ -545,7 +596,7 @@ WHERE cf.code = \'homelessReason\' AND cfvcfo.client_field_option_id IN (' . imp
                 $stmt->execute();
                 foreach ($stmt->fetchAll() as $item) {
                     if (!isset($clientsIds[$item['id']])) {
-                        $clientsIds[$item['id']] = 0;
+                        continue;
                     }
                     $clientsIds[$item['id']]++;
                 }
@@ -560,7 +611,7 @@ WHERE cf.code = \'breadwinner\' AND cfvcfo.client_field_option_id IN (' . implod
                 $stmt->execute();
                 foreach ($stmt->fetchAll() as $item) {
                     if (!isset($clientsIds[$item['id']])) {
-                        $clientsIds[$item['id']] = 0;
+                        continue;
                     }
                     $clientsIds[$item['id']]++;
                 }
@@ -574,26 +625,6 @@ WHERE cf.code = \'breadwinner\' AND cfvcfo.client_field_option_id IN (' . implod
             $clientsIds = array_keys($clientsIds);
         }
         if ($clientsIds === []) {
-            return [];
-        }
-        $stmt = $this->em->getConnection()->prepare('SELECT c.id
-            FROM client c
-            LEFT JOIN contract con ON con.client_id = c.id
-            LEFT JOIN contract_item ci1 ON con.id = ci1.contract_id AND ci1.date IS NOT NULL
-            LEFT JOIN contract_item_type cit1 ON ci1.type_id = cit1.id
-            LEFT JOIN contract_item ci2 ON con.id = ci2.contract_id AND ci2.date IS NULL
-            LEFT JOIN contract_item_type cit2 ON ci2.type_id = cit2.id
-            JOIN contract_status cs ON con.status_id = cs.id
-            WHERE 1 = 1 ' .
-            ($clientsIds !== null ? 'AND c.id IN (' . implode(',', $clientsIds) . ')' : '')
-        );
-        $stmt->execute();
-        $clientsIds = [];
-        foreach ($stmt->fetchAll() as $item) {
-            $clientsIds[] = $item['id'];
-        }
-        $clientsIds = array_unique($clientsIds);
-        if (!$clientsIds) {
             return [];
         }
         $stmt = $this->em->getConnection()->prepare('
