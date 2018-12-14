@@ -863,7 +863,7 @@ class ClientAdmin extends BaseAdmin
         if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_RESIDENT_QUESTIONNAIRE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_RESIDENT_QUESTIONNAIRE_ADMIN_ALL')) {
             if ($this->isMenuItemEnabled('shelter_history') && $this->isMenuItemEnabledShelterHistory($id)) {
                 $menu->addChild(
-                    'Анкета проживающего',
+                    'Анкета',
                     ['uri' => $admin->generateUrl('app.resident_questionnaire.admin.list', ['id' => $id])]
                 );
             }
