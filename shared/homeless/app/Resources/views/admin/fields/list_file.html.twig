@@ -3,6 +3,9 @@
 {% block field %}
     {% if object.filename %}
         <p>
+            <a href="{{ vich_uploader_asset(object, 'file') }}" download>{{ object.filename }}</a>
+        </p>
+        <p>
             {% if '.png' in object.filename or '.gif' in object.filename or '.jpg' in object.filename or '.jpeg' in object.filename %}
 
                 <div class="show_docs" onclick="showDocs{{ object.id }}(this); return false;">
@@ -14,22 +17,19 @@
                 <script>
                     function showDocs{{ object.id }}(oLink) {
                         var oBlock = oLink.getElementsByTagName('div')[0];
+                        var span = oLink.getElementsByTagName('span')[0];
+
                         if(oBlock.style.height == 0+'px') {
+                            span.innerHTML = "Свернуть";
                             oBlock.style.height = 400+'px';
                         } else {
+                            span.innerHTML = "Посмотреть";
                             oBlock.style.height = 0+'px';
                         }
                     }
                 </script>
 
             {% else %}
-                {#<iframe#}
-                        {#src=http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|replace({' ': '%20', '/app_dev.php': ''}) }}&amp;embedded=true#}
-                        {#width="800px"#}
-                        {#height="400px"#}
-                        {#style="border: none;">#}
-                {#</iframe>#}
-
                 <div url-show="http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|replace({' ': '%20', '/app_dev.php': ''}) }}&amp;embedded=true" class="show_docs" onclick="showDocs{{ object.id }}(this); return false;">
                     <span>Посмотреть</span>
                     <div class="file_block" style="height: 0px;">
@@ -41,18 +41,18 @@
                         var oBlock = oLink.getElementsByTagName('div')[0];
                         var oIframe = oLink.getElementsByTagName('iframe')[0];
                         var oIframeUrl = oLink.getAttribute('url-show');
+                        var span = oLink.getElementsByTagName('span')[0];
                         if(oBlock.style.height == 0+'px') {
+                            span.innerHTML = "Свернуть";
                             oBlock.style.height = 400+'px';
                             if(oIframe.src != oIframeUrl) {oIframe.src = oIframeUrl};
                         } else {
+                            span.innerHTML = "Посмотреть";
                             oBlock.style.height = 0+'px';
                         }
                     }
                 </script>
             {% endif %}
-        </p>
-        <p>
-            <a href="{{ vich_uploader_asset(object, 'file') }}" download>{{ object.filename }}</a>
         </p>
         <style>
             .file_block{
