@@ -232,6 +232,14 @@ services:
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 
+  app.position.admin:
+      class: AppBundle\Admin\PositionAdmin
+      tags:
+          - { name: sonata.admin, manager_type: orm, label: 'Должности' }
+      arguments: [null, AppBundle\Entity\Position, SonataAdminBundle:CRUD]
+      calls:
+          - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
+
   app.file_type:
       class: AppBundle\Form\Type\AppFileType
       tags:

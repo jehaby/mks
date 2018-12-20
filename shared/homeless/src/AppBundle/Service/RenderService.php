@@ -99,12 +99,11 @@ class RenderService
             $image = 'data:image/png;base64,' . base64_encode(file_get_contents($client->getPhotoPath()));
         }
         list($width, $height) = $client->getPhotoSize(300, 350);
-        // TODO после добавления должностей пофиксится specialty
         return $this->templating->render('/pdf/contract.html.twig', [
             'contract' => $contract,
             'client' => $client,
             'user' => $user,
-            'specialty' => ($user->getLastname() === 'Свердлин' ? 'Председатель' : ($user->getLastname() === 'Самонов' ? 'Юрист-консультант' : ($user->getLastname() === 'Яковлева' ? 'Юрист-консультант' : ($user->getLastname() === 'Карлинский' ? 'Консультант по правовым вопросам' : 'Специалист по социальной работе')))),
+            'specialty' => ($user->getPositionText() ? $user->getPositionText() : ($user->getPosition() ? $user->getPosition()->getName() : 'Специалист по социальной работе')),
             'webDir' => $this->kernel->getRootDir() . '/../web',
             'image' => $image,
             'height' => $height,
