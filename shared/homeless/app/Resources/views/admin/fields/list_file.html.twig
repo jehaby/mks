@@ -3,13 +3,10 @@
 {% block field %}
     {% if object.filename %}
         <p>
-            <a href="{{ vich_uploader_asset(object, 'file') }}" download>{{ object.filename }}</a>
-        </p>
-        <p>
             {% if '.png' in object.filename or '.gif' in object.filename or '.jpg' in object.filename or '.jpeg' in object.filename %}
 
                 <div class="show_docs" onclick="showDocs{{ object.id }}(this); return false;">
-                    <span>Посмотреть</span>
+                    <span>{{ object.filename }} Посмотреть</span>
                     <div class="file_block" style="height: 0px;">
                         <img src="{{ vich_uploader_asset(object, 'file') }}" width="400px"/>
                     </div>
@@ -31,7 +28,7 @@
 
             {% else %}
                 <div url-show="http://docs.google.com/viewer?url={{ app.request.uriForPath(vich_uploader_asset(object, 'file'))|replace({' ': '%20', '/app_dev.php': ''}) }}&amp;embedded=true" class="show_docs" onclick="showDocs{{ object.id }}(this); return false;">
-                    <span>Посмотреть</span>
+                    <span>{{ object.filename }} Посмотреть</span>
                     <div class="file_block" style="height: 0px;">
                         <iframe src="" height="400" width="600"></iframe>
                     </div>
@@ -43,16 +40,19 @@
                         var oIframeUrl = oLink.getAttribute('url-show');
                         var span = oLink.getElementsByTagName('span')[0];
                         if(oBlock.style.height == 0+'px') {
-                            span.innerHTML = "Свернуть";
+                            span.innerHTML = "{{ object.filename }} Свернуть";
                             oBlock.style.height = 400+'px';
                             if(oIframe.src != oIframeUrl) {oIframe.src = oIframeUrl};
                         } else {
-                            span.innerHTML = "Посмотреть";
+                            span.innerHTML = "{{ object.filename }} Посмотреть";
                             oBlock.style.height = 0+'px';
                         }
                     }
                 </script>
             {% endif %}
+        </p>
+        <p>
+            <a href="{{ vich_uploader_asset(object, 'file') }}" download>Скачать</a>
         </p>
         <style>
             .file_block{
