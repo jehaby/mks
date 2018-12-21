@@ -221,7 +221,7 @@
     </tr>
     <tr>
         <td colspan="3">
-            {{ org_contacts_full|join('<br/>') }}
+            {{ org_contacts_full|join('<br/>')|raw }}
             {{ specialty }} {{ user.fullName }}.
             {% if user.passport %}
                 Паспорт {{ user.passport }}
