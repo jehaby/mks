@@ -56,6 +56,8 @@
 
     > ./app/console fos:js-routing:dump
 
+    > ./app/console assets:install
+
     > ./app/console assetic:dump --symlink
 
 11. Настройте хост для проекта, перейдите по адресу хоста, 
