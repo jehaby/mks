@@ -317,6 +317,9 @@
 | pay | boolean | Платная | - |
 | document | [Document](#document) | Документ | - |
 
+
+TODO: add service-item desc
+
 ## <a name="shelter-history">ShelterHistory</a>
 
 Данные о проживании в приюте (договор о заселении)

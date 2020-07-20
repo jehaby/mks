@@ -9,7 +9,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 /**
  * Клиент
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\ClientRepository")*
  * @Vich\Uploadable
  */
 class Client extends BaseEntity
@@ -130,6 +130,14 @@ class Client extends BaseEntity
      * @ORM\OrderBy({"createdAt" = "DESC", "id" = "DESC"})
      */
     private $services;
+
+    /**
+     * Выданные вещи (одежда, предметы гигиены, ...)
+     * @ORM\OneToMany(targetEntity="HumAidItemDelivery", mappedBy="client")
+     * @ORM\OrderBy({"createdAt" = "DESC", "id" = "DESC"})
+     */
+    private $humAidItemDeliveries;
+
 
     /**
      * Справки

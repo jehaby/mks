@@ -118,6 +118,7 @@ class ClientAdmin extends BaseAdmin
                 ->end();
         }
 
+        // TODO (now): add "Последние выданные вещи"
 
         if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_ALL')) {
             $showMapper
