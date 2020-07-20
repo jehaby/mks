@@ -1,19 +1,18 @@
 (ns humaid.app
   (:require
-   [reagent.core :as r]
-   [reagent.dom :as rdom]
+   [ajax.core :refer [GET POST]]
+   [clojure.string :as string]
    [goog.events :as events]
    [goog.history.EventType :as HistoryEventType]
    [goog.string :as gstring]
    [goog.string.format]
-;;   [humaid.ajax :as ajax]
    [humaid.notification :as ntfc]
-;;   [ajax.core :refer [GET POST]]
+   [reagent.core :as r]
+   [reagent.dom :as rdom]
    [reitit.core :as reitit]
-;;   [reitit.coercion.spec :as rss] 
-   [reitit.frontend :as rf]
-   [clojure.string :as string])
+   [reitit.frontend :as rf])
   (:import goog.History))
+
 
 (def allowed-time 120)
 (defonce timer-fn (atom nil))
