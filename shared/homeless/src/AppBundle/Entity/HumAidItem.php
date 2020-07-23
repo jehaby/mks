@@ -38,6 +38,12 @@ class HumAidItem extends BaseEntity
      */
     private $limitDays;
 
+    /**
+     * Кем создано
+     * @ORM\ManyToOne(targetEntity="Application\Sonata\UserBundle\Entity\User", fetch="EXTRA_LAZY")
+     */
+    protected $createdBy; // TODO EXTRA_LAZY doesn't work as expected in http://localhost/api/v1/clients/1 call
+
     public function __toString()
     {
         return (string)$this->getName();

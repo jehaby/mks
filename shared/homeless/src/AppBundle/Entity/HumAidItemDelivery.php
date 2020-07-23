@@ -33,6 +33,12 @@ class HumAidItemDelivery extends BaseEntity
     private $deliveredAt;
 
     /**
+     * Кем создано
+     * @ORM\ManyToOne(targetEntity="Application\Sonata\UserBundle\Entity\User", fetch="EXTRA_LAZY")
+     */
+    protected $createdBy;
+
+    /**
      * @return int
      */
     public function getId()

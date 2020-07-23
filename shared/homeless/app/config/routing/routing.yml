@@ -5,12 +5,15 @@ app:
 admin:
     resource: admin.yml
 
-api:
+api_clients:
     type: rest
     prefix: api/v1
     resource: "@AppBundle/Controller/API/ClientsController.php"
 
-
+api_humaid_items:
+    type: rest
+    prefix: api/v1
+    resource: "@AppBundle/Controller/API/HumAidItemsController.php"
 
 fos_js_routing:
     resource: "@FOSJsRoutingBundle/Resources/config/routing/routing.xml"

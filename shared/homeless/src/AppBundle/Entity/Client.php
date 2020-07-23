@@ -867,6 +867,25 @@ class Client extends BaseEntity
     }
 
     /**
+     * @return mixed
+     */
+    public function getHumAidItemDeliveries()
+    {
+        return $this->humAidItemDeliveries;
+    }
+
+    /**
+     * @param mixed $humAidItemDeliveries
+     * @return Client
+     */
+    public function setHumAidItemDeliveries($humAidItemDeliveries)
+    {
+        $this->humAidItemDeliveries = $humAidItemDeliveries;
+        return $this;
+    }
+
+
+    /**
      * Add certificate
      *
      * @param \AppBundle\Entity\Certificate $certificate
