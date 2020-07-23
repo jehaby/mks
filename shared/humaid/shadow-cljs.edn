@@ -10,7 +10,11 @@
   [reagent "0.10.0"]]
 
  :dev-http {8142
-            "public"}
+            {:root "public"
+
+             ;; адрес на котором запущен МКС
+             :proxy-url "http://localhost" ;; TODO use config
+             }}
 
  :builds
  {:app {:target :browser

@@ -6,228 +6,180 @@
    [goog.history.EventType :as HistoryEventType]
    [goog.string :as gstring]
    [goog.string.format]
+   [humaid.date :as date]
    [humaid.notification :as ntfc]
    [reagent.core :as r]
    [reagent.dom :as rdom]
-   [reitit.core :as reitit]
    [reitit.frontend :as rf])
   (:import goog.History))
 
+(def config {
+             :api-addr "/api/v1"
+             :mks-addr ""
+             :timer-duration-sec 120})
 
-(def allowed-time 120)
+(def humaid-item-categories {3 "Одежда"
+                             17 "Гигиена"
+                             51 "Другое"})
+
+;; State
+;; --------------------
+
+(defonce state (r/atom {:page :start}))
+
+(defonce timer (r/atom {:val (:timer-duration-sec config)
+                        :started false}))
 (defonce timer-fn (atom nil))
 
-(defonce session (r/atom {:page :home
-                          :ready true
-                          :timer-started false
-                          :timer-val allowed-time
-                          }))
-
-(defn timer [sec]
-  (let [min  (quot sec 60)
-        sec  (rem sec 60)]
-    [:div.is-size-2 (gstring/format "%02d:%02d" min sec)]))
-
-(defn reset-timer! []
-  (js/clearInterval @timer-fn)
-  (swap! session assoc :timer-val allowed-time
-         :timer-started false))
-
-(defn start-timer! []
-  (when-not (:timer-started @session)
-    (swap! session assoc :timer-started true)
-    (reset! timer-fn
-            (js/setInterval
-             (fn [] (swap! session update :timer-val
-                           #(if (< 0 %) (dec %) %)))
-             1000))))
+;; Misc
+;; --------------------
 
 (defn set-hash! [loc]
   (set! (.-hash js/window.location) loc))
 
-(defn nav-link [uri title page]
-  [:a.navbar-item
-   {:href   uri
-    :class (when (= page (:page @session)) "is-active")}
-   title])
+(defn reset-timer! []
+  (js/clearInterval @timer-fn)
+  (swap! timer assoc :val (:timer-duration-sec config)
+         :started false))
 
-(defn navbar []
-  (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "humaid"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-start
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]]]]))
+(defn start-timer! []
+  (when-not (:started @timer)
+    (swap! timer assoc :started true)
+    (reset! timer-fn
+            (js/setInterval
+             (fn [] (swap! timer update :val #(if (< 0 %) (dec %) %)))
+             1000))))
 
-(def clients [
-              {:name "Григорий Свердлин"
-               :id 1
-               :photo "https://homeless.ru/upload/resize_cache/iblock/5d8/632_420_2/954c51d4c8d51fa043c97d74e508bfab.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Андрей Чапаев"
-               :id 2
-               :photo "https://homeless.ru/upload/resize_cache/iblock/952/632_420_2/964c4ec5359e4eb47af6539a10104639.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Данил Краморов"
-               :id 3
-               :photo "https://homeless.ru/upload/resize_cache/iblock/c64/632_420_2/_.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Карина Гаринова"
-               :id 4
-               :photo "https://homeless.ru/upload/resize_cache/iblock/fc1/632_420_2/b0fa7c4a83c5216c4dcfe793d6331f3b.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Валентина Марьяновна Борейко"
-               :id 5
-               :photo "https://homeless.ru/upload/resize_cache/iblock/518/632_420_2/33841d18341c3c6f3a952e40c070622a.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Василиса Молева"
-               :id 6
-               :photo "https://homeless.ru/upload/resize_cache/iblock/760/632_420_2/Vasilisa_sm.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Дарья Лысухина"
-               :id 7
-               :photo "https://homeless.ru/upload/iblock/ff0/dasha_lysukhina.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              {:name "Ксения Солодова"
-               :id 8
-               :photo "https://homeless.ru/upload/resize_cache/iblock/93c/632_420_2/TptfwYiRgcQ.jpg"
-               :date-of-bearth "1234-01-02"
-               }
-              ])
+(defn client-fullname [client]
+  (str (:lastname client) " " (:firstname client) " " (:middlename client)))
 
-(defn client-search [name]
-  (if (empty? name)
-    []
-    (filter #(re-matches (re-pattern (str "(?i).*" name ".*")) (:name %)) clients)))
+(defn client-photo [photo-name]
+  (str (:mks-addr config) "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name))
 
-(defn handle-search [state event]
-  ;;  (start-timer!)
+
+;; Requests
+;; --------------------
+
+(defn load-client! [id]
+  (GET (str (:api-addr config) "/clients/" id)
+       {:response-format :json
+        :keywords? true
+        :params {:humaid_delivery 1}
+        :handler #(swap! state assoc :client %)
+        :error-handler #(prn "err in load-client " %)
+        }))
+
+(defn load-humaid-items! []
+  (GET (str (:api-addr config) "/humaid_items")
+       {:response-format :json
+        :keywords? true
+        :handler #(swap! state assoc :humaid-items %)
+        ;;        :error-handler #() TODO
+        }))
+
+(defn save-items! [client-id item-ids]
+  (POST (str (:api-addr config) "/clients/" client-id "/humaiditem_delivery")
+        {:params {"item_ids" @item-ids}
+         :format :json
+         :handler #(do
+                     (ntfc/show! "success" "Выдача сохранена.")
+                     (reset! item-ids #{})
+                     (set-hash! (str "/clients/" client-id)))
+         :error-handler #(ntfc/show! "danger" "Ошибка =(")}))
+
+(defn handle-search [search-res event]
   (let [name (-> event .-target .-value)]
     (if (empty? name)
       (do (reset-timer!)
-          (swap! state assoc :search-res nil))
+          (reset! search-res nil))
       (when (> (count name) 2)
         (do (start-timer!)
-            (when-let [res (client-search name)]
-              (swap! state assoc :search-res res)))))))
+            (GET (str (:api-addr config) "/clients/search")
+                 {:params {:v name}
+                  :response-format :json
+                  :keywords? true
+                  :handler #(reset! search-res %)
+                  :error-handler #(when (= 404 (:status %))
+                                    (reset! search-res []))
+                  }))))))
+
+;; UI
+;; --------------------
+
+(defn timer-ui []
+  (let [v (:val @timer)
+        min  (quot v 60)
+        sec  (rem v 60)]
+    [:div.is-size-2 (gstring/format "%02d:%02d" min sec)]))
+
+
+(defn modal-loading []
+  [:div.modal.is-active
+   [:div.modal-backgroud]
+   [:div.modal-content
+    [:div.content "Загружается..."]
+    [:button.button.is-large.is-loading " -----------"]]])
 
 (defn start-page []
-  (r/with-let [state (r/atom {} )
-               _   (reset-timer!)]
+  (r/with-let [search-res (r/atom nil)
+               _  (reset-timer!)]
     [:section.section>div.container>div.content
      [:section.columns
       [:div.column.is-2
-       [timer (:timer-val @session)]]
+       [timer-ui]]
 
-      [:div.column
-       [:h3 "Поиск клиента"]
-       [:div.control
-        [:input.input.is-large
-         {:type "text"
-          :placeholder "ФИО..."
-          :on-change #(handle-search state %)
-          }]]
+      (let [clients @search-res
+            not-found (= clients [])]
 
-       (when-let [clients (:search-res @state)]
-         (for [{:keys [id name date-of-bearth]} clients]
+        [:div.column
+         [:h3 "Поиск клиента"]
+         [:div.control
+          [:input
+           {:class ["input" "is-large" (when not-found "is-danger")]
+            :type "text"
+            :placeholder "ФИО..."
+            :on-change #(handle-search search-res %)
+            }]
+          (when not-found [:p.help.is-danger "Не нашли =("])]
+
+         (for [{:keys [id birthDate] :as client} clients
+               :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
+           ^{:key id}
            [:div.is-size-2
-            [:a {:href (str "/#/clients/" id) :key id}
-             (str name " (" date-of-bearth ")")]] ;; TODO styling
-           ))]]]))
+            [:a {:href (str "/#/clients/" id)}
+             (str (client-fullname client) " (" birth-date ")")]] ;; TODO styling
+           )])]]))
 
 (defn delivery-link [id kind]
   (str "/#/clients/" id "/delivery/" (name kind)))
 
-;; спортивные штаны, трико, юбки, пиджак, кофта, толстовка, свитер, бадлон, рубашки, куртка, ремень, кепка, шапка, перчатки
-(defn load-client! [id]
-  (if-let [client (-> (filter #(= id (str (:id %))) clients) first)]
-    (swap! session assoc :client
-           (merge client
-                  {:services
-                   {:clothes
-                    {:shoes {:title "Обувь"}
-                     :underwear {:title "Нижнее белье"}
-                     :socks {:title "Носки"}
-                     :t-shirts {:title "Футболки" :unavailable-until "2020-07-15"}
-                     :jeans {:title "Джинсы" :unavailable-until "2020-07-18"}
-                     :trousers {:title "Штаны"}
-                     :sweatpans {:title "Спортивные штаны"}
-                     :tights {:title "Трико"}
-                     :skirts {:title "Юбки"}
-                     :blazer {:title "Пиджак"}
-                     :blouse {:title "Кофта"}
-                     :hoody  {:title "Толстовка"}
-                     :sweater {:title "Свитер"}
-                     :badlon {:title "Бадлон"}
-                     :shirts {:title "Рубашки"}
-                     :jacket {:title "Куртка"}
-                     :belt {:title "Ремень"}
-                     :cap {:title "Кепка"}
-                     :hat {:title "Шапка"}
-                     :gloves {:title "Перчатки"}
-                     }
-                    :hygiene
-                    {:shaver {:title "бритвенный станок"}
-                     :soap {:title "мыло"}
-                     :toothbrush {:title "щетка"}
-                     :toothpaste {:title "паста"}
-                     :cream {:title "крем"}
-                     :pantyliners {:title "прокладки"}
-                     :napkins {:title "салфетки"}
-                     :comb {:title "расческа"}
-                     :nail-clippers {:title "кусачки для ногтей"  :unavailable-until "2020-07-14"}
-                     :shampoo {:title "шампунь"}
-                     :deodorant {:title "дезодорант"}
-                     :shower-gel {:title "гель для душа"}
-                     :cotton-buds {:title "ватные палочки"}
-                     }
-                    :crutches
-                    {:crutches {:title "Костыли/трость"}}
-                    }
-                   }
-                  )
-           )
-    (swap! session dissoc :client)))
-
 (defn client-page [{{id :id} :path}]
-  (load-client! id)
-  (start-timer!)
-  (let [client (:client @session)]
-    [:section.section.container.content
-     [:section.columns
-      [:div.column.is-2
-       [timer (:timer-val @session)]
-       [:button.button {:on-click #(set-hash! "/")} "Завершить выдачу"]]
+  (r/with-let [_ (load-client! id)
+               _  (start-timer!)]
+    (if-let [client (:client @state)]
+      [:section.section.container.content
+       [:section.columns
+        [:div.column.is-2
+         [timer-ui]
+         [:button.button {:on-click #(set-hash! "/")} "Завершить выдачу"]]
 
-      [:div.column.is-3
-       [:p>a {:href (delivery-link (:id client) :clothes)}
-        [:button.button.is-large.is-block "Одежда"]]
-       [:p>a {:href (delivery-link (:id client) :hygiene)}
-        [:button.button.is-large.is-block "Гигиена"]]
-       [:p>a {:href (delivery-link (:id client) :crutches)}
-        [:button.button.is-large.is-block "Костыли и трости"]]]
+        [:div.column.is-3
+         [:p>a {:href (delivery-link (:id client) :clothes)}
+          [:button.button.is-large.is-block "Одежда"]]
+         [:p>a {:href (delivery-link (:id client) :hygiene)}
+          [:button.button.is-large.is-block "Гигиена"]]
+         [:p>a {:href (delivery-link (:id client) :crutches)}
+          [:button.button.is-large.is-block "Костыли и трости"]]]
 
-      [:div.column.is-3
-       [:img
-        {:src (:photo client)}]
-       [:p.is-size-5 (:name client)]
-       ]]
-     ]))
+        [:div.column.is-3
+         [:img
+          {:src (client-photo (:photoName client))}]
+         [:p.is-size-5 (client-fullname client)]
+         ]]
+       ]
+
+      [modal-loading]
+      )))
 
 (defn redirect-modal [state]
   [:div.modal {:class [(when (:active? @state) "is-active")]} ;; TODO modal formatting
@@ -241,74 +193,96 @@
      [:button.button {:on-click #(swap! state assoc :active? false) :aria-label "close"} "Нет"]]
     ]])
 
-(defn delivery-page [{{kind :kind id :id} :path}]  ;; TODO: what if client-id and session client differs?
-  (when-not (:client @session)
-    (load-client! id)) ;; TODO: should I do this?
-  (r/with-let [kind (keyword kind)
+(defn delivery-page [{{kind :kind id :id} :path}]  ;; TODO: what if client-id and state client differs?
+  (r/with-let [_ (start-timer!)
+               _ (when-not (:client @state) (load-client! id))
+               kind (keyword kind)
+               category-id (kind {:clothes 3
+                                  :hygiene 17
+                                  :crutches 51})
                heading (str "Выдача " (kind {:clothes "одежды"
                                              :hygiene "предметов гигиены"
                                              :crutches "костылей и тростей"}))
                selected-items (r/atom #{})
-               switch-selected! (fn [selected-items item-key]
-                                  (if (contains? @selected-items item-key)
-                                    (swap! selected-items disj item-key)
-                                    (swap! selected-items conj item-key)))
+               switch-selected! (fn [selected-items item-id]
+                                  (if (contains? @selected-items item-id)
+                                    (swap! selected-items disj item-id)
+                                    (swap! selected-items conj item-id)))
 
                save! (fn [selected-items kind]
-                       (doseq [i @selected-items]
-                         (swap! session assoc-in [:client :services kind i :unavailable-until] "2020-08-30"))
-                       (reset! selected-items #{})
-                       (ntfc/show! "success" "Выдача сохранена."))
+                       (save-items! (get-in @state [:client :id]) selected-items))
 
                redirect-modal-state (r/atom {:active? false :url nil})
                redirect! (fn [url selected-items]
                            (if (empty? @selected-items)
                              (set-hash! url)
                              (swap! redirect-modal-state assoc :active? true
-                                    :url url)
-                             ))]
+                                    :url url)))
 
-    [:section.section.container.content
+               humaid-item-unavailable-until
+               (fn [client item-id limit-days]
+                 (when-let [item-delivery (-> (filter
+                                               #(= (str item-id) (:humAidItemID %))
+                                               (:humAidItems client))
+                                              (first))]
+                   (let [date (js/Date. (:deliveredAt item-delivery))
+                         next-available-date (date/add-days  date limit-days)]
+                     (when (< (date/today) next-available-date)
+                       next-available-date))
+                   ))]
 
-     [redirect-modal redirect-modal-state]
+    (if-let [client (:client @state)]
 
-     [:section.columns
-      [:div.column.is-2
-       [timer (:timer-val @session)]
-       [:p>button.button
-        {:on-click #(redirect! (str "/clients/" id) selected-items)}
-        "Вернуться к списку"]
-       [:p>button.button.is-light.is-danger
-        {:on-click #(redirect! "/" selected-items)}
-        "Завершить выдачу"]]
+      [:section.section.container.content
 
-      [:section.column
-       (let [selected @selected-items
-             client (:client @session)
-             items (kind (:services client))]
-         [:div.container.content
-          [:h3 heading]
-          [:p.is-size-5.has-text-weight-light (str " " (:name client))]
-          [:section
-           (for [[item-key {title :title unavailable-until :unavailable-until}] items]
-             (if unavailable-until
-               [:button.button.mx-2.my-2.is-size-5
-                {:disabled true
-                 :key item-key
-                 :dangerouslySetInnerHTML {:__html (str (clojure.string/capitalize title) (str "<br> (доступно с " unavailable-until ")"))}
-                 }]
+       [redirect-modal redirect-modal-state]
+
+       [:section.columns
+        [:div.column.is-2
+         [timer-ui]
+         [:p>button.button
+          {:on-click #(redirect! (str "/clients/" id) selected-items)}
+          "Вернуться к списку"]
+         [:p>button.button.is-light.is-danger
+          {:on-click #(redirect! "/" selected-items)}
+          "Завершить выдачу"]]
+
+        [:section.column
+         (let [selected @selected-items
+               client (:client @state)]
+           [:div.container.content
+            [:h3 heading]
+            [:p.is-size-5.has-text-weight-light (str " " (:name client))]
+            [:section
+
+             (for [{:keys [id name category limitDays]} (:humaid-items @state)
+                   :when (= category category-id)
+                   :let [unavailable-until (humaid-item-unavailable-until client id limitDays)]]
                [:button
-                {:key item-key
-                 :class ["button" "is-large" "mx-2" "my-2"
-                         (when (contains? selected item-key) "is-success")]
-                 :on-click #(switch-selected! selected-items item-key)}
-                (clojure.string/capitalize title)]))]
-          ])
-       [:div.container.content
-        [:button.button.is-large.is-light.is-success
-         {:disabled (empty? @selected-items)
-          :on-click #(save! selected-items kind)}
-         "Сохранить"]]]]]))
+                {:key id
+                 :class ["button" "is-large" "mx-2" "my-2" "disabled"
+                         (when (contains? selected id) "is-success")]
+                 :on-click #(switch-selected! selected-items id)
+                 :dangerouslySetInnerHTML
+                 {:__html (str
+                           (clojure.string/capitalize name)
+                           (when unavailable-until
+                             (str "<br> (доступно с " (date/date->mm-dd unavailable-until) ")"))
+                           )}}])
+             ]])
+         [:div.container.content
+          [:button.button.is-large.is-light.is-success
+           {:disabled (empty? @selected-items)
+            :on-click #(save! selected-items kind)}
+           "Сохранить"]]]]]
+
+      [modal-loading]
+
+      )))
+
+;; -------------------------
+;; Routing
+
 
 (def pages
   {:start #'start-page
@@ -320,36 +294,21 @@
    [:p "404 (страница не найдена)"]
    [:p  [:a {:href "#/"} "назад"]]])
 
-(defn modal-loading []
-  [:div.modal.is-active
-   [:div.modal-backgroud]
-   [:div.modal-content
-    [:div.content "Загружается..."]
-    [:button.button.is-large.is-loading " -----------"]
-    ]])
-
 (defn page []
-  (let [s @session]
-    (if (:ready s)
-      [(pages (:page s) #'not-found-page) (:parameters s)]
-      [modal-loading]
-      )))
-
-;; -------------------------
-;; Routes
+  (let [s @state]
+    [(pages (:page s) #'not-found-page) (:parameters s)]))
 
 (def router
   (rf/router
    [["/" :start]
     ["/search" :search]
     ["/clients/:id" :client]
-    ["/clients/:id/delivery/:kind" :delivery]]
-   ;;   {:data {:coercion rss/coercion}}
-   ))
+    ["/clients/:id/delivery/:kind" :delivery]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
        (rf/match-by-path router)))
+
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined
@@ -359,7 +318,7 @@
      HistoryEventType/NAVIGATE
      (fn [event]
        (let [m (match-route (.-token event))]
-         (swap! session assoc
+         (swap! state assoc
                 :page (get-in m [:data :name])
                 :parameters (:parameters m)))))
     (.setEnabled true)))
@@ -367,14 +326,10 @@
 ;; -------------------------
 
 (defn mount-components []
-  ;;  (rdom/render [#'navbar] (.getElementById js/document "navbar"))
-;;  (rdom/render [#'ntfc/notification] (.getElementById js/document "notification"))
+  (rdom/render [#'ntfc/notification] (.getElementById js/document "notification"))
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  ;;  (ajax/load-interceptors!)
-
-  (prn "in init! ")
-
+  (load-humaid-items!)
   (hook-browser-navigation!)
   (mount-components))
