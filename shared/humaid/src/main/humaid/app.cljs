@@ -13,8 +13,7 @@
    [reitit.frontend :as rf])
   (:import goog.History))
 
-(def config {
-             :api-addr "/api/v1"
+(def config {:api-addr "/api/v1"
              :mks-addr ""
              :timer-duration-sec 120})
 
@@ -29,14 +28,11 @@
 
 (defonce timer (r/atom {:val (:timer-duration-sec config)
                         :started false}))
-(defonce timer-fn (atom nil))
 
 ;; Misc
 ;; --------------------
 
-(defn set-hash! [loc]
-  (set! (.-hash js/window.location) loc))
-
+(defonce timer-fn (atom nil))
 (defn reset-timer! []
   (js/clearInterval @timer-fn)
   (swap! timer assoc :val (:timer-duration-sec config)
@@ -49,6 +45,9 @@
             (js/setInterval
              (fn [] (swap! timer update :val #(if (< 0 %) (dec %) %)))
              1000))))
+
+(defn set-hash! [loc]
+  (set! (.-hash js/window.location) loc))
 
 (defn client-fullname [client]
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
@@ -119,7 +118,6 @@
         min  (quot v 60)
         sec  (rem v 60)]
     [:div.is-size-2 (gstring/format "%02d:%02d" min sec)]))
-
 
 (defn modal-loading []
   [:div.modal.is-active
@@ -217,9 +215,6 @@
                                     (swap! selected-items disj item-id)
                                     (swap! selected-items conj item-id)))
 
-               save! (fn [selected-items kind]
-                       (save-items! (get-in @state [:client :id]) selected-items))
-
                redirect-modal-state (r/atom {:active? false :url nil})
                redirect! (fn [url selected-items]
                            (if (empty? @selected-items)
@@ -227,17 +222,18 @@
                              (swap! redirect-modal-state assoc :active? true
                                     :url url)))
 
-               humaid-item-unavailable-until
-               (fn [client item-id limit-days]
-                 (when-let [item-delivery (-> (filter
-                                               #(= (str item-id) (:humAidItemID %))
-                                               (:humAidItems client))
-                                              (first))]
+               delivery-unavailable-until
+               (fn
+                 ;; deliveries -- list of items delivered to a client (list of maps with :humAidItemID and :deliveredAt keys).
+                 ;; In case current item (2nd arg) cannot be issued today returns nearest available date.
+                 [deliveries {item-id :id limit-days :limitDays}]
+                 (when-let [item-delivery (some
+                                           #(when (= (str item-id) (:humAidItemID %)) %)
+                                           deliveries)]
                    (let [date (js/Date. (:deliveredAt item-delivery))
                          next-available-date (date/add-days  date limit-days)]
                      (when (< (date/today) next-available-date)
-                       next-available-date))
-                   ))]
+                       next-available-date))))]
 
     (if-let [client (:client @state)]
 
@@ -257,15 +253,15 @@
 
         [:section.column
          (let [selected @selected-items
-               client (:client @state)]
+               deliveries (:humAidItems client)]
            [:div.container.content
             [:h3 heading]
             [:p.is-size-5.has-text-weight-light (str " " (:name client))]
             [:section
 
-             (for [{:keys [id name category limitDays]} (:humaid-items @state)
+             (for [{:keys [id name category limitDays] :as item} (:humaid-items @state)
                    :when (= category category-id)
-                   :let [unavailable-until (humaid-item-unavailable-until client id limitDays)]]
+                   :let [unavailable-until (delivery-unavailable-until deliveries item)]]
                [:button
                 {:key id
                  :class ["button" "is-large" "mx-2" "my-2" "disabled"
@@ -281,7 +277,7 @@
          [:div.container.content
           [:button.button.is-large.is-light.is-success
            {:disabled (empty? @selected-items)
-            :on-click #(save! selected-items kind)}
+            :on-click #(save-items! (:id client) selected-items)}
            "Сохранить"]]]]]
 
       [modal-loading]
@@ -290,7 +286,6 @@
 
 ;; -------------------------
 ;; Routing
-
 
 (def pages
   {:start #'start-page
