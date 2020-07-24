@@ -304,7 +304,6 @@
 (def router
   (rf/router
    [["/" :start]
-    ["/search" :search]
     ["/clients/:id" :client]
     ["/clients/:id/delivery/:kind" :delivery]]))
 
