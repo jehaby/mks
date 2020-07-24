@@ -12,7 +12,10 @@
   [kind msg]
   (do (reset! state {:kind kind :msg msg})
       ;; TODO: bug (bad behavior): 1) show! {:msg "n1"}, ... after 4.1999 sec 2) show! {:msg "n2"} -> user doesn't see n2
-      (js/setTimeout clear! 4200))) 
+      (js/setTimeout clear! 4200)))
+
+(defn success! [msg] (show! "success" msg))
+(defn danger! [msg] (show! "danger" msg))
 
 (defn notification []
   (let [s @state]

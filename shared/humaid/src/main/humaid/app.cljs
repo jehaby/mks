@@ -66,7 +66,11 @@
         :keywords? true
         :params {:humaid_delivery 1}
         :handler #(swap! state assoc :client %)
-        :error-handler #(prn "err in load-client " %)
+        :error-handler
+        #(if (= 404 (:status %))
+           (do (ntfc/danger! (gstring/format "Клиент (id = %d) не найден" id))
+               (set-hash! "/"))
+           (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
         }))
 
 (defn load-humaid-items! []
@@ -74,7 +78,8 @@
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :humaid-items %)
-        ;;        :error-handler #() TODO
+        :error-handler
+        #(ntfc/danger! "Ошибка при получении списка вещей. Попробуйте перезагрузить страницу.")
         }))
 
 (defn save-items! [client-id item-ids]
@@ -82,10 +87,11 @@
         {:params {"item_ids" @item-ids}
          :format :json
          :handler #(do
-                     (ntfc/show! "success" "Выдача сохранена.")
+                     (ntfc/success! "Выдача сохранена.")
                      (reset! item-ids #{})
                      (set-hash! (str "/clients/" client-id)))
-         :error-handler #(ntfc/show! "danger" "Ошибка =(")}))
+         :error-handler
+         #(ntfc/danger! "Ошибка при сохранении выдачи. Попробуйте еще раз.")}))
 
 (defn handle-search [search-res event]
   (let [name (-> event .-target .-value)]
@@ -99,8 +105,10 @@
                   :response-format :json
                   :keywords? true
                   :handler #(reset! search-res %)
-                  :error-handler #(when (= 404 (:status %))
-                                    (reset! search-res []))
+                  :error-handler
+                  #(if (= 404 (:status %))
+                     (reset! search-res [])
+                     (ntfc/danger! "Ошибка при получении результатов поиска."))
                   }))))))
 
 ;; UI
