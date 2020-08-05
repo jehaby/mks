@@ -17,6 +17,7 @@ services:
       - php
     volumes:
       - "./shared/logs/nginx:/var/log/nginx"
+      - "./shared/humaid/public:/var/www/humaid"
     networks:
       default:
         aliases:
