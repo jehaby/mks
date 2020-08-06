@@ -15,8 +15,7 @@
 
 (def config {:api-addr "/api/v1"
              :mks-addr ""
-             :app-prefix "/humaid"
-             :timer-duration-sec 120})
+             :app-prefix "/humaid"})
 
 (def humaid-item-categories {3 "Одежда"
                              17 "Гигиена"
@@ -27,24 +26,24 @@
 
 (defonce state (r/atom {:page :start}))
 
-(defonce timer (r/atom {:val (:timer-duration-sec config)
-                        :started false}))
+(defonce stopwatch (r/atom {:val 0
+                            :started false}))
 
 ;; Misc
 ;; --------------------
 
-(defonce timer-fn (atom nil))
-(defn reset-timer! []
-  (js/clearInterval @timer-fn)
-  (swap! timer assoc :val (:timer-duration-sec config)
-         :started false))
+(defonce stopwatch-fn (atom nil))
 
-(defn start-timer! []
-  (when-not (:started @timer)
-    (swap! timer assoc :started true)
-    (reset! timer-fn
+(defn reset-stopwatch! []
+  (js/clearInterval @stopwatch-fn)
+  (swap! stopwatch assoc :val 0 :started false))
+
+(defn start-stopwatch! []
+  (when-not (:started @stopwatch)
+    (swap! stopwatch assoc :started true)
+    (reset! stopwatch-fn
             (js/setInterval
-             (fn [] (swap! timer update :val #(if (< 0 %) (dec %) %)))
+             (fn [] (swap! stopwatch update :val inc))
              1000))))
 
 (defn set-hash! [loc]
@@ -97,10 +96,10 @@
 (defn handle-search [search-res event]
   (let [name (-> event .-target .-value)]
     (if (empty? name)
-      (do (reset-timer!)
+      (do (reset-stopwatch!)
           (reset! search-res nil))
       (when (> (count name) 2)
-        (do (start-timer!)
+        (do (start-stopwatch!)
             (GET (str (:api-addr config) "/clients/search")
                  {:params {:v name}
                   :response-format :json
@@ -115,8 +114,8 @@
 ;; UI
 ;; --------------------
 
-(defn timer-ui []
-  (let [v (:val @timer)
+(defn stopwatch-ui []
+  (let [v (:val @stopwatch)
         min  (quot v 60)
         sec  (rem v 60)]
     [:div.is-size-2 (gstring/format "%02d:%02d" min sec)]))
@@ -130,11 +129,11 @@
 
 (defn start-page []
   (r/with-let [search-res (r/atom nil)
-               _  (reset-timer!)]
+               _  (reset-stopwatch!)]
     [:section.section>div.container>div.content
      [:section.columns
       [:div.column.is-2
-       [timer-ui]]
+       [stopwatch-ui]]
 
       (let [clients @search-res
             not-found (= clients [])]
@@ -163,12 +162,12 @@
 
 (defn client-page [{{id :id} :path}]
   (r/with-let [_ (load-client! id)
-               _  (start-timer!)]
+               _  (start-stopwatch!)]
     (if-let [client (:client @state)]
       [:section.section.container.content
        [:section.columns
         [:div.column.is-2
-         [timer-ui]
+         [stopwatch-ui]
          [:button.button {:on-click #(set-hash! "/")} "Завершить выдачу"]]
 
         [:div.column.is-3
@@ -202,7 +201,7 @@
     ]])
 
 (defn delivery-page [{{kind :kind id :id} :path}]  ;; TODO: what if client-id and state client differs?
-  (r/with-let [_ (start-timer!)
+  (r/with-let [_ (start-stopwatch!)
                _ (when-not (:client @state) (load-client! id))
                kind (keyword kind)
                category-id (kind {:clothes 3
@@ -245,7 +244,7 @@
 
        [:section.columns
         [:div.column.is-2
-         [timer-ui]
+         [stopwatch-ui]
          [:p>button.button
           {:on-click #(redirect! (str "/clients/" id) selected-items)}
           "Вернуться к списку"]
