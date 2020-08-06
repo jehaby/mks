@@ -15,6 +15,7 @@
 
 (def config {:api-addr "/api/v1"
              :mks-addr ""
+             :app-prefix "/humaid"
              :timer-duration-sec 120})
 
 (def humaid-item-categories {3 "Одежда"
@@ -63,7 +64,8 @@
   (GET (str (:api-addr config) "/clients/" id)
        {:response-format :json
         :keywords? true
-        :params {:humaid_delivery 1}
+        :params {:humaid_deliveries 1
+                 :services 1}
         :handler #(swap! state assoc :client %)
         :error-handler
         #(if (= 404 (:status %))
@@ -152,12 +154,12 @@
                :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
            ^{:key id}
            [:div.is-size-2
-            [:a {:href (str "/#/clients/" id)}
+            [:a {:href (str (:app-prefix config) "/#/clients/" id)}
              (str (client-fullname client) " (" birth-date ")")]] ;; TODO styling
            )])]]))
 
 (defn delivery-link [id kind]
-  (str "/#/clients/" id "/delivery/" (name kind)))
+  (str (:app-prefix config) "/#/clients/" id "/delivery/" (name kind)))
 
 (defn client-page [{{id :id} :path}]
   (r/with-let [_ (load-client! id)
@@ -335,3 +337,4 @@
   (load-humaid-items!)
   (hook-browser-navigation!)
   (mount-components))
+
