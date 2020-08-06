@@ -118,7 +118,9 @@
   (let [v (:val @stopwatch)
         min  (quot v 60)
         sec  (rem v 60)]
-    [:div.is-size-2 (gstring/format "%02d:%02d" min sec)]))
+    [:div
+     {:class ["is-size-2" (when (> min 4) "has-text-warning")]}
+     (gstring/format "%02d:%02d" min sec)]))
 
 (defn modal-loading []
   [:div.modal.is-active
