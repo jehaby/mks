@@ -8,6 +8,7 @@
    [goog.string.format]
    [humaid.date :as date]
    [humaid.notification :as ntfc]
+   [reagent-keybindings.keyboard :as kb]
    [reagent.core :as r]
    [reagent.dom :as rdom]
    [reitit.frontend :as rf])
@@ -53,7 +54,9 @@
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
 
 (defn client-photo [photo-name]
-  (str (:mks-addr config) "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name))
+  ;; TODO: default photo
+  (when photo-name
+    (str (:mks-addr config) "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
 
 
 ;; Requests
@@ -156,7 +159,7 @@
            ^{:key id}
            [:div.is-size-2
             [:a {:href (str (:app-prefix config) "/#/clients/" id)}
-             (str (client-fullname client) " (" birth-date ")")]] ;; TODO styling
+             (str (client-fullname client) " (" birth-date ")")]]
            )])]]))
 
 (defn delivery-link [id kind]
@@ -172,20 +175,22 @@
          [stopwatch-ui]
          [:button.button {:on-click #(set-hash! "/")} "Завершить выдачу"]]
 
-        [:div.column.is-3
-         [:p>a {:href (delivery-link (:id client) :clothes)}
-          [:button.button.is-large.is-block "Одежда"]]
-         [:p>a {:href (delivery-link (:id client) :hygiene)}
-          [:button.button.is-large.is-block "Гигиена"]]
-         [:p>a {:href (delivery-link (:id client) :crutches)}
-          [:button.button.is-large.is-block "Костыли и трости"]]]
+        (let [clothes (delivery-link (:id client) :clothes)
+              hygiene (delivery-link (:id client) :hygiene)
+              crutches (delivery-link (:id client) :crutches)] ;; TODO: s/crutches/other
+          [:div.column.is-3
+           [:p>a {:href clothes} [:button.button.is-large.is-block "1. Одежда"]]
+           [:p>a {:href hygiene} [:button.button.is-large.is-block "2. Гигиена"]]
+           [:p>a {:href crutches}[:button.button.is-large.is-block "3. Другое"]]
+
+           [kb/kb-action "1" #(set-hash! clothes)]
+           [kb/kb-action "2" #(set-hash! hygiene)]
+           [kb/kb-action "3" #(set-hash! crutches)]])
 
         [:div.column.is-3
          [:img
           {:src (client-photo (:photoName client))}]
-         [:p.is-size-5 (client-fullname client)]
-         ]]
-       ]
+         [:p.is-size-5 (client-fullname client)]]]]
 
       [modal-loading]
       )))
@@ -206,6 +211,7 @@
   (r/with-let [_ (start-stopwatch!)
                _ (when-not (:client @state) (load-client! id))
                kind (keyword kind)
+               hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./" ;; let's hope there won't be more than 42 items.
                category-id (kind {:clothes 3
                                   :hygiene 17
                                   :crutches 51})
@@ -256,35 +262,37 @@
 
         [:section.column
          (let [selected @selected-items
+               items (filter #(= category-id (:category %)) (:humaid-items @state))
                deliveries (:humAidItems client)]
            [:div.container.content
             [:h3 heading]
             [:p.is-size-5.has-text-weight-light (str " " (:name client))]
             [:section
 
-             (for [{:keys [id name category limitDays] :as item} (:humaid-items @state)
-                   :when (= category category-id)
-                   :let [unavailable-until (delivery-unavailable-until deliveries item)]]
-               [:button
-                {:key id
-                 :class ["button" "is-large" "mx-2" "my-2" "disabled"
-                         (when (contains? selected id) "is-success")]
-                 :on-click #(switch-selected! selected-items id)
-                 :dangerouslySetInnerHTML
-                 {:__html (str
-                           (clojure.string/capitalize name)
-                           (when unavailable-until
-                             (str "<br> (доступно с " (date/date->mm-dd unavailable-until) ")"))
-                           )}}])
-             ]])
+             (for [[{:keys [id name category limitDays] :as item} key] (map vector items hotkeys)
+                   :let [unavailable-until (delivery-unavailable-until deliveries item)
+                         selected? (contains? selected id)]]
+               [:<> {:key id}
+                [:button
+                 {:class ["button" "mx-2" "my-2" "disabled"
+                          (when selected? "is-success")
+                          (when (and unavailable-until (not selected?)) "is-light")]
+                  :on-click #(switch-selected! selected-items id)}
+
+                 (str key ". " (clojure.string/capitalize name))
+                 (when unavailable-until
+                   [:span.has-text-weight-light.is-size-6.mx-1
+                    (str "(доступно с " (date/date->mm-dd unavailable-until) ")")])]
+                [kb/kb-action key #(switch-selected! selected-items id)]])]])
          [:div.container.content
-          [:button.button.is-large.is-light.is-success
+          [:button.button.is-light.is-success
            {:disabled (empty? @selected-items)
             :on-click #(save-items! (:id client) selected-items)}
-           "Сохранить"]]]]]
+           "Сохранить"]
+          [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
+          ]]]]
 
       [modal-loading]
-
       )))
 
 ;; -------------------------
@@ -302,7 +310,9 @@
 
 (defn page []
   (let [s @state]
-    [(pages (:page s) #'not-found-page) (:parameters s)]))
+    [:div
+     [(pages (:page s) #'not-found-page) (:parameters s)]
+     [kb/keyboard-listener]]))
 
 (def router
   (rf/router
@@ -338,4 +348,3 @@
   (load-humaid-items!)
   (hook-browser-navigation!)
   (mount-components))
-
