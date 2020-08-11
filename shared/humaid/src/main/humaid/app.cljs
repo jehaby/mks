@@ -269,7 +269,7 @@
             [:p.is-size-5.has-text-weight-light (str " " (:name client))]
             [:section
 
-             (for [[{:keys [id name category limitDays] :as item} key] (map vector items hotkeys)
+             (for [[{:keys [id name category limitDays] :as item} key] (map vector items (concat hotkeys (repeat nil)))
                    :let [unavailable-until (delivery-unavailable-until deliveries item)
                          selected? (contains? selected id)]]
                [:<> {:key id}
@@ -279,17 +279,18 @@
                           (when (and unavailable-until (not selected?)) "is-light")]
                   :on-click #(switch-selected! selected-items id)}
 
-                 (str key ". " (clojure.string/capitalize name))
+                 (str (when key (str key ". ")) (clojure.string/capitalize name))
                  (when unavailable-until
                    [:span.has-text-weight-light.is-size-6.mx-1
                     (str "(доступно с " (date/date->mm-dd unavailable-until) ")")])]
-                [kb/kb-action key #(switch-selected! selected-items id)]])]])
+                (when key
+                  [kb/kb-action key #(switch-selected! selected-items id)])])]])
          [:div.container.content
           [:button.button.is-light.is-success
            {:disabled (empty? @selected-items)
             :on-click #(save-items! (:id client) selected-items)}
            "Сохранить"]
-          [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
+            [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
           ]]]]
 
       [modal-loading]
