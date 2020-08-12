@@ -7,7 +7,8 @@
  :dependencies
  [[cljs-ajax "0.8.0"]
   [metosin/reitit "0.5.5"]
-  [reagent "0.10.0"]]
+  [reagent "0.10.0"]
+  [org.clojars.frozenlock/reagent-keybindings "1.0.2"]]
 
  :dev-http {8142
             {:root "public"
