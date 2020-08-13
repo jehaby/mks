@@ -20,7 +20,7 @@
 
 (def humaid-item-categories {3 "Одежда"
                              17 "Гигиена"
-                             51 "Другое"})
+                             22 "Костыли/трости"})
 
 ;; State
 ;; --------------------
@@ -66,12 +66,36 @@
   (GET (str (:api-addr config) "/clients/" id)
        {:response-format :json
         :keywords? true
-        :params {:humaid_deliveries 1
-                 :services 1}
         :handler #(swap! state assoc :client %)
         :error-handler
         #(if (= 404 (:status %))
            (do (ntfc/danger! (gstring/format "Клиент (id = %d) не найден" id))
+               (set-hash! "/"))
+           (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
+        }))
+
+(defn load-client-humaid-items! [client-id]
+  (GET (str (:api-addr config) "/clients/" client-id "/humaiditem_deliveries") ;; TODO: rename to .. /humaid_deliveries
+       {:response-format :json
+        :keywords? true
+        :handler #(swap! state assoc :client-deliveries %)
+        :error-handler
+        #(if (= 404 (:status %))
+           (do (ntfc/danger! (gstring/format "Клиент (id = %d) не найден" client-id))
+               (set-hash! "/"))
+           (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
+        }))
+
+(defn load-client-services! [client-id]
+  (GET (str (:api-addr config) "/clients/" client-id "/services")
+       {:response-format :json
+        :keywords? true
+        :vec-strategy :rails ;; https://cljdoc.org/d/cljs-ajax/cljs-ajax/0.8.0/api/ajax.url
+        :params {:types (keys humaid-item-categories)}
+        :handler #(swap! state assoc :client-services %)
+        :error-handler
+        #(if (= 404 (:status %))
+           (do (ntfc/danger! (gstring/format "Клиент (id = %d) не найден" client-id))
                (set-hash! "/"))
            (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
         }))
@@ -86,7 +110,7 @@
         }))
 
 (defn save-items! [client-id item-ids]
-  (POST (str (:api-addr config) "/clients/" client-id "/humaiditem_delivery")
+  (POST (str (:api-addr config) "/clients/" client-id "/humaiditem_deliveries")
         {:params {"item_ids" @item-ids}
          :format :json
          :handler #(do
@@ -166,7 +190,9 @@
   (str (:app-prefix config) "/#/clients/" id "/delivery/" (name kind)))
 
 (defn client-page [{{id :id} :path}]
-  (r/with-let [_ (load-client! id)
+  (r/with-let [_ (do (load-client! id)
+                     (load-client-humaid-items! id)
+                     (load-client-services! id))
                _  (start-stopwatch!)]
     (if-let [client (:client @state)]
       [:section.section.container.content
@@ -177,11 +203,11 @@
 
         (let [clothes (delivery-link (:id client) :clothes)
               hygiene (delivery-link (:id client) :hygiene)
-              crutches (delivery-link (:id client) :crutches)] ;; TODO: s/crutches/other
+              crutches (delivery-link (:id client) :crutches)]
           [:div.column.is-3
            [:p>a {:href clothes} [:button.button.is-large.is-block "1. Одежда"]]
            [:p>a {:href hygiene} [:button.button.is-large.is-block "2. Гигиена"]]
-           [:p>a {:href crutches}[:button.button.is-large.is-block "3. Другое"]]
+           [:p>a {:href crutches}[:button.button.is-large.is-block "3. Костыли/трости"]]
 
            [kb/kb-action "1" #(set-hash! clothes)]
            [kb/kb-action "2" #(set-hash! hygiene)]
@@ -209,12 +235,15 @@
 
 (defn delivery-page [{{kind :kind id :id} :path}]  ;; TODO: what if client-id and state client differs?
   (r/with-let [_ (start-stopwatch!)
-               _ (when-not (:client @state) (load-client! id))
+               _ (when-not (:client @state)
+                   (do (load-client! id)
+                       (load-client-humaid-items! id)
+                       (load-client-services! id))) ;; TODO(now ) check/load for other data
                kind (keyword kind)
-               hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./" ;; let's hope there won't be more than 42 items.
+               hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./"
                category-id (kind {:clothes 3
                                   :hygiene 17
-                                  :crutches 51})
+                                  :crutches 22})
                heading (str "Выдача " (kind {:clothes "одежды"
                                              :hygiene "предметов гигиены"
                                              :crutches "костылей и тростей"}))
@@ -263,7 +292,7 @@
         [:section.column
          (let [selected @selected-items
                items (filter #(= category-id (:category %)) (:humaid-items @state))
-               deliveries (:humAidItems client)]
+               deliveries (:client-deliveries @state)]
            [:div.container.content
             [:h3 heading]
             [:p.is-size-5.has-text-weight-light (str " " (:name client))]
@@ -285,6 +314,15 @@
                     (str "(доступно с " (date/date->mm-dd unavailable-until) ")")])]
                 (when key
                   [kb/kb-action key #(switch-selected! selected-items id)])])]])
+
+         (when-let [services (seq (filter #(= (str category-id) (:type %)) (:client-services @state)))]
+           [:div.container.content
+            [:h5 "Выдачи-услуги"]
+            [:ul
+             (for [{comment :comment created-at :createdAt} services
+                   :let [created-at (date/date->yy-mm-dd (js/Date. created-at))]]
+               [:li (str comment " (" created-at ")")])]])
+
          [:div.container.content
           [:button.button.is-light.is-success
            {:disabled (empty? @selected-items)

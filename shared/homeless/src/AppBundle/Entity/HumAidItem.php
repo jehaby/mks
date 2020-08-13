@@ -16,7 +16,7 @@ class HumAidItem extends BaseEntity
     // Категории
     const CATEGORY_CLOTHES = 3; // одежда
     const CATEGORY_HYGIENE = 17; // гигиена
-    const CATEGORY_OTHER = 51; // другое
+    const CATEGORY_CRUTCHES = 22; // костыли/трости
 
     // TODO: отсутствует константа для "костылей и тростей". Оно нам вообще надо?
 

@@ -28,7 +28,7 @@ class ClientsController extends FOSRestController
 
         $searchVal = $this->getRequest()->query->get('v'); // TODO: deprecated in Symfony 3+, inject
         $clients = $this->getDoctrine()->getRepository('AppBundle:Client')
-            ->search($searchVal);
+                        ->search($searchVal);
 
         if (count($clients) === 0) {
             throw new NotFoundHttpException();
@@ -40,7 +40,6 @@ class ClientsController extends FOSRestController
 
     /**
      * @param $id
-     * @Rest\QueryParam(name="humaid_delivery", description="when true result will contain client's humAidDeliveryItems")
      * @return \Symfony\Component\HttpFoundation\Response
      * @View(serializerGroups={"client"})
      */
@@ -53,29 +52,15 @@ class ClientsController extends FOSRestController
 
         try {
             $client = $qb
-                ->select(['c'])
-                ->from('AppBundle\Entity\Client', 'c')
-                ->where('c.id = :id')
-                ->setParameter('id', $id)
-                ->getQuery()
-                ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)
-                ->getSingleResult(Query::HYDRATE_ARRAY);
+                    ->select(['c'])
+                    ->from('AppBundle\Entity\Client', 'c')
+                    ->where('c.id = :id')
+                    ->setParameter('id', $id)
+                    ->getQuery()
+                    ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)
+                    ->getSingleResult(Query::HYDRATE_ARRAY);
         } catch (NoResultException $e) {
             throw new NotFoundHttpException('Client not found');
-        }
-
-
-        $fetchHumAidDeliveries = $req->query->get('humaid_delivery');
-        if ($fetchHumAidDeliveries) {
-            $items = $qb->select('MAX(hid.deliveredAt) AS deliveredAt, IDENTITY(hid.humAidItem) AS humAidItemID')
-                ->from('AppBundle\Entity\HumAidItemDelivery', 'hid')
-                ->andWhere('IDENTITY(hid.client) = :cid')
-                ->groupBy('hid.humAidItem')
-                ->setParameter('cid', $client['id'])
-                ->getQuery()
-                ->getArrayResult();
-
-            $client['humAidItems'] = $items;
         }
 
         $view = $this->view($client, 200);
@@ -83,7 +68,77 @@ class ClientsController extends FOSRestController
     }
 
     /**
-     * @Route("/clients/{clientID}/humaiditem_delivery") // TODO: fix  app_api_clients_postclienthumaiditemdelivery     ANY        ANY      ANY    /clients/{clientID}/humaiditem_delivery/{itemID}
+     * @Route("/clients/{clientID}/humaiditem_deliveries")
+     * TODO: better api docs
+     * @param $clientID
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getClientHumAidItemDeliveriesAction($clientID)
+    {
+        $this->checkClientExists($clientID);
+
+        $items = $this
+               ->getDoctrine()
+               ->getEntityManager()
+               ->createQueryBuilder()
+               ->select('MAX(hid.deliveredAt) AS deliveredAt, IDENTITY(hid.humAidItem) AS humAidItemID')
+               ->from('AppBundle\Entity\HumAidItemDelivery', 'hid')
+               ->andWhere('IDENTITY(hid.client) = :cid')
+               ->groupBy('hid.humAidItem')
+               ->setParameter('cid', $clientID)
+               ->getQuery()
+               ->getArrayResult();
+
+        $view = $this->view($items, 200);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Route("/clients/{clientID}/services")
+     * @Rest\QueryParam(name="types", description="array of service type ids")
+     * TODO: better api docs
+     * @param $clientID
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getClientServicesAction($clientID)
+    {
+        $req = $this->getRequest();
+        $types = $req->query->get('types');
+
+        $this->checkClientExists($clientID);
+
+        $qb = $this->getDoctrine()->getEntityManager()->createQueryBuilder();
+
+        $services = $qb
+                  ->select('s.comment, s.amount, IDENTITY(s.type) AS type, s.createdAt, s.updatedAt')
+                  ->from('AppBundle\Entity\Service', 's')
+                  ->andWhere('IDENTITY(s.client) = :cid')
+                  ->andWhere($qb->expr()->in('IDENTITY(s.type)', ':types'))
+                  ->setParameter('cid', $clientID)
+                  ->setParameter('types', $types)
+                  ->orderBy('s.createdAt', 'DESC')
+                  ->getQuery()
+                  ->getArrayResult();
+
+        $view = $this->view($services, 200);
+        return $this->handleView($view);
+    }
+
+    private function checkClientExists($clientID)
+    {
+        /** @var Doctrine\ORM\Query $query */
+        $query = $this->getDoctrine()->getEntityManager()
+               ->createQuery('SELECT 1 FROM AppBundle\Entity\Client c WHERE c.id = :cid')
+               ->setParameter('cid', $clientID)
+               ->setMaxResults(1);
+
+        if (count($query->getResult()) === 0) {
+            throw new NotFoundHttpException('Client not found');
+        }
+    }
+
+    /**
+     * @Route("/clients/{clientID}/humaiditem_deliveries")
      * TODO: better api docs
      * @param $clientID
      * @return \Symfony\Component\HttpFoundation\Response
@@ -106,13 +161,13 @@ class ClientsController extends FOSRestController
 
         $items = $em->getRepository('AppBundle:HumAidItem')->findById($data['item_ids']);
 
-//        TODO: better errors
+        //        TODO: better errors
 
         foreach ($items as $item) {
             $delivery = (new HumAidItemDelivery())
-                ->setClient($client)
-                ->setHumAidItem($item)
-                ->setDeliveredAt(new \DateTime());
+                      ->setClient($client)
+                      ->setHumAidItem($item)
+                      ->setDeliveredAt(new \DateTime());
 
             $em->persist($delivery);
         }
