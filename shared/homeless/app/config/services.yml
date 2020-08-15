@@ -32,6 +32,8 @@ services:
       calls:
           - [addChild, ['@app.note.admin']]
           - [addChild, ['@app.service.admin']]
+          - [addChild, ['@app.humaid_item.admin']]
+          - [addChild, ['@app.humaid_item_delivery.admin']]
           - [addChild, ['@app.document.admin']]
           - [addChild, ['@app.document_file.admin']]
           - [addChild, ['@app.contract.admin']]
@@ -190,6 +192,14 @@ services:
       tags:
           - { name: sonata.admin, manager_type: orm, label: 'Предметы выдачи' }
       arguments: [null, AppBundle\Entity\HumAidItem, SonataAdminBundle:CRUD]
+      calls:
+          - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
+
+  app.humaid_item_delivery.admin:
+      class: AppBundle\Admin\HumAidItemDeliveryAdmin
+      tags:
+          - { name: sonata.admin, manager_type: orm, label: 'Выдачи ...' }
+      arguments: [null, AppBundle\Entity\HumAidItemDelivery, SonataAdminBundle:CRUD]
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 

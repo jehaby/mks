@@ -118,6 +118,16 @@ class ClientAdmin extends BaseAdmin
                 ->end();
         }
 
+        if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_SERVICE_ADMIN_ALL')) {
+            $showMapper
+                ->with('Последние выдачи', ['class' => 'col-md-4'])
+                ->add('humAidItemDeliveries', 'array', [
+                    'label' => ' ',
+                    'template' => '/admin/fields/client_humaid_deliveries_show.html.twig',
+                ])
+                ->end();
+        }
+
         // TODO (now): add "Последние выданные вещи"
 
         if ($securityContext->isGranted('ROLE_SUPER_ADMIN') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_LIST') || $securityContext->isGranted('ROLE_APP_NOTE_ADMIN_ALL')) {
