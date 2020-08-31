@@ -10,10 +10,10 @@ api_clients:
     prefix: api/v1
     resource: "@AppBundle/Controller/API/ClientsController.php"
 
-api_humaid_items:
+api_delivery_items:
     type: rest
     prefix: api/v1
-    resource: "@AppBundle/Controller/API/HumAidItemsController.php"
+    resource: "@AppBundle/Controller/API/DeliveryItemsController.php"
 
 fos_js_routing:
     resource: "@FOSJsRoutingBundle/Resources/config/routing/routing.xml"

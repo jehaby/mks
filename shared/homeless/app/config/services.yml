@@ -32,8 +32,8 @@ services:
       calls:
           - [addChild, ['@app.note.admin']]
           - [addChild, ['@app.service.admin']]
-          - [addChild, ['@app.humaid_item.admin']]
-          - [addChild, ['@app.humaid_item_delivery.admin']]
+          - [addChild, ['@app.delivery_item.admin']]
+          - [addChild, ['@app.delivery.admin']]
           - [addChild, ['@app.document.admin']]
           - [addChild, ['@app.document_file.admin']]
           - [addChild, ['@app.contract.admin']]
@@ -187,19 +187,19 @@ services:
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 
-  app.humaid_item.admin:
-      class: AppBundle\Admin\HumAidItemAdmin
+  app.delivery_item.admin:
+      class: AppBundle\Admin\DeliveryItemAdmin
       tags:
           - { name: sonata.admin, manager_type: orm, label: 'Предметы выдачи' }
-      arguments: [null, AppBundle\Entity\HumAidItem, SonataAdminBundle:CRUD]
+      arguments: [null, AppBundle\Entity\DeliveryItem, SonataAdminBundle:CRUD]
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 
-  app.humaid_item_delivery.admin:
-      class: AppBundle\Admin\HumAidItemDeliveryAdmin
+  app.delivery.admin:
+      class: AppBundle\Admin\DeliveryAdmin
       tags:
-          - { name: sonata.admin, manager_type: orm, label: 'Выдачи ...' }
-      arguments: [null, AppBundle\Entity\HumAidItemDelivery, SonataAdminBundle:CRUD]
+          - { name: sonata.admin, manager_type: orm, label: 'Выдачи' }
+      arguments: [null, AppBundle\Entity\Delivery, SonataAdminBundle:CRUD]
       calls:
           - [setLabelTranslatorStrategy, ['@sonata.admin.label.strategy.underscore']]
 

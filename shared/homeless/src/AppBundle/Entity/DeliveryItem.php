@@ -10,15 +10,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Вещь в пункте выдачи.
  * @ORM\Entity()
  */
-class HumAidItem extends BaseEntity
+class DeliveryItem extends BaseEntity
 {
 
-    // Категории
+    // Категории (значения взяты из таблицы БД service_type)
     const CATEGORY_CLOTHES = 3; // одежда
     const CATEGORY_HYGIENE = 17; // гигиена
     const CATEGORY_CRUTCHES = 22; // костыли/трости
 
-    // TODO: отсутствует константа для "костылей и тростей". Оно нам вообще надо?
+    private static $CATEGORY_NAMES = [
+        3 => "Одежда",
+        17 => "Гигиена",
+        22 => "Костыли/трости"
+    ];
 
     /**
      * Название
@@ -40,9 +44,9 @@ class HumAidItem extends BaseEntity
 
     /**
      * Кем создано
-     * @ORM\ManyToOne(targetEntity="Application\Sonata\UserBundle\Entity\User", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="Application\Sonata\UserBundle\Entity\User")
      */
-    protected $createdBy; // TODO EXTRA_LAZY doesn't work as expected in http://localhost/api/v1/clients/1 call
+    protected $createdBy;
 
     public function __toString()
     {
@@ -54,7 +58,7 @@ class HumAidItem extends BaseEntity
      *
      * @param string $name
      *
-     * @return HumAidItem
+     * @return DeliveryItem
      */
     public function setName($name)
     {
@@ -78,7 +82,7 @@ class HumAidItem extends BaseEntity
      *
      * @param integer $category
      *
-     * @return HumAidItem
+     * @return DeliveryItem
      */
     public function setCategory($category)
     {
@@ -98,11 +102,21 @@ class HumAidItem extends BaseEntity
     }
 
     /**
+     * Get category
+     *
+     * @return string
+     */
+    public function getCategoryName()
+    {
+        return self::$CATEGORY_NAMES[$this->category] ?: '';
+    }
+
+    /**
      * Set limitDays
      *
      * @param integer $limitDays
      *
-     * @return HumAidItem
+     * @return DeliveryItem
      */
     public function setLimitDays($limitDays)
     {

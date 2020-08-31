@@ -3,8 +3,8 @@
 namespace AppBundle\Controller\API;
 
 use AppBundle\Entity\Client;
-use AppBundle\Entity\HumAidItem;
-use AppBundle\Entity\HumAidItemDelivery;
+use AppBundle\Entity\DeliveryItem;
+use AppBundle\Entity\Delivery;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -68,12 +68,12 @@ class ClientsController extends FOSRestController
     }
 
     /**
-     * @Route("/clients/{clientID}/humaiditem_deliveries")
+     * @Route("/clients/{clientID}/deliveries")
      * TODO: better api docs
      * @param $clientID
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function getClientHumAidItemDeliveriesAction($clientID)
+    public function getClientDeliveriesAction($clientID)
     {
         $this->checkClientExists($clientID);
 
@@ -81,10 +81,10 @@ class ClientsController extends FOSRestController
                ->getDoctrine()
                ->getEntityManager()
                ->createQueryBuilder()
-               ->select('MAX(hid.deliveredAt) AS deliveredAt, IDENTITY(hid.humAidItem) AS humAidItemID')
-               ->from('AppBundle\Entity\HumAidItemDelivery', 'hid')
-               ->andWhere('IDENTITY(hid.client) = :cid')
-               ->groupBy('hid.humAidItem')
+               ->select('MAX(d.deliveredAt) AS deliveredAt, IDENTITY(d.deliveryItem) AS deliveryItemID')
+               ->from('AppBundle\Entity\Delivery', 'd')
+               ->andWhere('IDENTITY(d.client) = :cid')
+               ->groupBy('d.deliveryItem')
                ->setParameter('cid', $clientID)
                ->getQuery()
                ->getArrayResult();
@@ -138,13 +138,13 @@ class ClientsController extends FOSRestController
     }
 
     /**
-     * @Route("/clients/{clientID}/humaiditem_deliveries")
+     * @Route("/clients/{clientID}/deliveries")
      * TODO: better api docs
      * @param $clientID
      * @return \Symfony\Component\HttpFoundation\Response
      * @View(serializerGroups={"client"})
      */
-    public function postClientHumAidItemDeliveriesAction($clientID)
+    public function postClientDeliveriesAction($clientID)
     {
         $em = $this->getDoctrine()->getManager();
 
@@ -159,14 +159,14 @@ class ClientsController extends FOSRestController
             throw new NotFoundHttpException('Client not found');
         }
 
-        $items = $em->getRepository('AppBundle:HumAidItem')->findById($data['item_ids']);
+        $items = $em->getRepository('AppBundle:DeliveryItem')->findById($data['item_ids']);
 
         //        TODO: better errors
 
         foreach ($items as $item) {
-            $delivery = (new HumAidItemDelivery())
+            $delivery = (new Delivery())
                       ->setClient($client)
-                      ->setHumAidItem($item)
+                      ->setItem($item)
                       ->setDeliveredAt(new \DateTime());
 
             $em->persist($delivery);

@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @package AppBundle\Entity
  * @ORM\Entity()
  */
-class HumAidItemDelivery extends BaseEntity
+class Delivery extends BaseEntity
 {
 
     /**
@@ -21,9 +21,9 @@ class HumAidItemDelivery extends BaseEntity
     private $client;
 
     /**
-     * @ORM\ManyToOne(targetEntity="HumAidItem")
+     * @ORM\ManyToOne(targetEntity="DeliveryItem")
      */
-    private $humAidItem;
+    private $deliveryItem;
 
     /**
      * @var \Date
@@ -48,7 +48,7 @@ class HumAidItemDelivery extends BaseEntity
 
     /**
      * @param int $id
-     * @return HumAidItemDelivery
+     * @return Delivery
      */
     public function setId($id)
     {
@@ -66,7 +66,7 @@ class HumAidItemDelivery extends BaseEntity
 
     /**
      * @param mixed $client
-     * @return HumAidItemDelivery
+     * @return Delivery
      */
     public function setClient($client)
     {
@@ -77,18 +77,18 @@ class HumAidItemDelivery extends BaseEntity
     /**
      * @return mixed
      */
-    public function getHumAidItem()
+    public function getDeliveryItem()
     {
-        return $this->humAidItem;
+        return $this->deliveryItem;
     }
 
     /**
-     * @param mixed $humAidItem
-     * @return HumAidItemDelivery
+     * @param mixed $item
+     * @return Delivery
      */
-    public function setHumAidItem($humAidItem)
+    public function setDeliveryItem($item)
     {
-        $this->humAidItem = $humAidItem;
+        $this->deliveryItem = $item;
         return $this;
     }
 
@@ -102,7 +102,7 @@ class HumAidItemDelivery extends BaseEntity
 
     /**
      * @param \DateTime $deliveredAt
-     * @return HumAidItemDelivery
+     * @return Delivery
      */
     public function setDeliveredAt($deliveredAt)
     {

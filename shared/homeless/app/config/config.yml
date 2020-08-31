@@ -213,7 +213,7 @@ sonata_admin:
                       - app.client_field.admin
                       - app.region.admin
                       - app.service_type.admin
-                      - app.humaid_item.admin
+                      - app.delivery_item.admin
                       - app.contract_item_type.admin
                       - app.generated_document_type.admin
                       - app.generated_document_start_text.admin

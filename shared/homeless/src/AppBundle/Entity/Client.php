@@ -133,10 +133,10 @@ class Client extends BaseEntity
 
     /**
      * Выданные вещи (одежда, предметы гигиены, ...)
-     * @ORM\OneToMany(targetEntity="HumAidItemDelivery", mappedBy="client")
+     * @ORM\OneToMany(targetEntity="Delivery", mappedBy="client")
      * @ORM\OrderBy({"createdAt" = "DESC", "id" = "DESC"})
      */
-    private $humAidItemDeliveries;
+    private $deliveries;
 
 
     /**
@@ -869,18 +869,18 @@ class Client extends BaseEntity
     /**
      * @return mixed
      */
-    public function getHumAidItemDeliveries()
+    public function getDeliveries()
     {
-        return $this->humAidItemDeliveries;
+        return $this->deliveries;
     }
 
     /**
-     * @param mixed $humAidItemDeliveries
+     * @param mixed $deliveries
      * @return Client
      */
-    public function setHumAidItemDeliveries($humAidItemDeliveries)
+    public function setDeliveries($deliveries)
     {
-        $this->humAidItemDeliveries = $humAidItemDeliveries;
+        $this->deliveries = $deliveries;
         return $this;
     }
 

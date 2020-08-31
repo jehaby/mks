@@ -18,7 +18,7 @@
              :mks-addr ""
              :app-prefix "/humaid"})
 
-(def humaid-item-categories {3 "Одежда"
+(def delivery-item-categories {3 "Одежда"
                              17 "Гигиена"
                              22 "Костыли/трости"})
 
@@ -74,8 +74,8 @@
            (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
         }))
 
-(defn load-client-humaid-items! [client-id]
-  (GET (str (:api-addr config) "/clients/" client-id "/humaiditem_deliveries") ;; TODO: rename to .. /humaid_deliveries
+(defn load-client-deliveries! [client-id]
+  (GET (str (:api-addr config) "/clients/" client-id "/deliveries")
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :client-deliveries %)
@@ -91,7 +91,7 @@
        {:response-format :json
         :keywords? true
         :vec-strategy :rails ;; https://cljdoc.org/d/cljs-ajax/cljs-ajax/0.8.0/api/ajax.url
-        :params {:types (keys humaid-item-categories)}
+        :params {:types (keys delivery-item-categories)}
         :handler #(swap! state assoc :client-services %)
         :error-handler
         #(if (= 404 (:status %))
@@ -100,8 +100,8 @@
            (ntfc/danger! "Ошибка при загрузке клиента. Попробуйте перезагрузить страницу."))
         }))
 
-(defn load-humaid-items! []
-  (GET (str (:api-addr config) "/humaid_items")
+(defn load-delivery-items! []
+  (GET (str (:api-addr config) "/delivery_items")
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :humaid-items %)
@@ -110,7 +110,7 @@
         }))
 
 (defn save-items! [client-id item-ids]
-  (POST (str (:api-addr config) "/clients/" client-id "/humaiditem_deliveries")
+  (POST (str (:api-addr config) "/clients/" client-id "/deliveries")
         {:params {"item_ids" @item-ids}
          :format :json
          :handler #(do
@@ -191,7 +191,7 @@
 
 (defn client-page [{{id :id} :path}]
   (r/with-let [_ (do (load-client! id)
-                     (load-client-humaid-items! id)
+                     (load-client-deliveries! id)
                      (load-client-services! id))
                _  (start-stopwatch!)]
     (if-let [client (:client @state)]
@@ -222,7 +222,7 @@
       )))
 
 (defn redirect-modal [state]
-  [:div.modal {:class [(when (:active? @state) "is-active")]} ;; TODO modal formatting
+  [:div.modal {:class [(when (:active? @state) "is-active")]}
    [:div.modal-background]
    [:div.modal-card
     [:div.modal-card-head]
@@ -233,12 +233,12 @@
      [:button.button {:on-click #(swap! state assoc :active? false) :aria-label "close"} "Нет"]]
     ]])
 
-(defn delivery-page [{{kind :kind id :id} :path}]  ;; TODO: what if client-id and state client differs?
+(defn delivery-page [{{kind :kind id :id} :path}]
   (r/with-let [_ (start-stopwatch!)
                _ (when-not (:client @state)
                    (do (load-client! id)
-                       (load-client-humaid-items! id)
-                       (load-client-services! id))) ;; TODO(now ) check/load for other data
+                       (load-client-deliveries! id)
+                       (load-client-services! id)))
                kind (keyword kind)
                hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./"
                category-id (kind {:clothes 3
@@ -262,11 +262,11 @@
 
                delivery-unavailable-until
                (fn
-                 ;; deliveries -- list of items delivered to a client (list of maps with :humAidItemID and :deliveredAt keys).
-                 ;; In case current item (2nd arg) cannot be issued today returns nearest available date.
+                 ;; deliveries -- list of items delivered to a client (list of maps with :deliveryItemID and :deliveredAt keys).
+                 ;; When current item (2nd arg) cannot be issued today returns nearest available date.
                  [deliveries {item-id :id limit-days :limitDays}]
                  (when-let [item-delivery (some
-                                           #(when (= (str item-id) (:humAidItemID %)) %)
+                                           #(when (= (str item-id) (:deliveryItemID %)) %)
                                            deliveries)]
                    (let [date (js/Date. (:deliveredAt item-delivery))
                          next-available-date (date/add-days  date limit-days)]
@@ -384,6 +384,6 @@
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
-  (load-humaid-items!)
+  (load-delivery-items!)
   (hook-browser-navigation!)
   (mount-components))

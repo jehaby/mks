@@ -17,7 +17,7 @@ class ServiceTypeRepository extends EntityRepository
         $qb = $this->createQueryBuilder('t');
 
         // Запрещаем создание услуги типов: одежда, гигиена, костыли.
-        // Переезжает в другую сущность (TODO: name hum_aid_item or delivery_item)
+        // Функционал переезжает в сущность DeliveryItem.
         $qb
             ->where('t.id NOT IN (3, 17, 22)')
             ->orderBy('t.sort', 'ASC');

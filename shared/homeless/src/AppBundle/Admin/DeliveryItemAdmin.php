@@ -2,11 +2,11 @@
 
 namespace AppBundle\Admin;
 
-use AppBundle\Entity\HumAidItem;
+use AppBundle\Entity\DeliveryItem;
 use Sonata\AdminBundle\Datagrid\ListMapper;
 use Sonata\AdminBundle\Form\FormMapper;
 
-class HumAidItemAdmin extends BaseAdmin
+class DeliveryItemAdmin extends BaseAdmin
 {
     protected $datagridValues = array(
         '_sort_order' => 'ASC',
@@ -28,9 +28,9 @@ class HumAidItemAdmin extends BaseAdmin
             ->add('category', 'choice', [
                 'label' => 'Категория',
                 'choices' => [
-                    HumAidItem::CATEGORY_CLOTHES => 'Одежда',
-                    HumAidItem::CATEGORY_HYGIENE => 'Гигиена',
-                    HumAidItem::CATEGORY_OTHER => 'Другое',
+                    DeliveryItem::CATEGORY_CLOTHES => 'Одежда',
+                    DeliveryItem::CATEGORY_HYGIENE => 'Гигиена',
+                    DeliveryItem::CATEGORY_CRUTCHES => 'Другое',
                 ],
             ])
             ->add('limitDays', 'number', [
@@ -50,9 +50,9 @@ class HumAidItemAdmin extends BaseAdmin
             ->add('category', 'choice', [
                 'label' => 'Категория',
                 'choices' => [
-                    HumAidItem::CATEGORY_CLOTHES => 'Одежда',
-                    HumAidItem::CATEGORY_HYGIENE => 'Гигиена',
-                    HumAidItem::CATEGORY_OTHER => 'Другое',
+                    DeliveryItem::CATEGORY_CLOTHES => 'Одежда',
+                    DeliveryItem::CATEGORY_HYGIENE => 'Гигиена',
+                    DeliveryItem::CATEGORY_CRUTCHES => 'Другое',
                 ],
             ])
             ->add('limitDays', 'number', [
