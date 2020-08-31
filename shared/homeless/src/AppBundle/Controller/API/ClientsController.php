@@ -161,12 +161,10 @@ class ClientsController extends FOSRestController
 
         $items = $em->getRepository('AppBundle:DeliveryItem')->findById($data['item_ids']);
 
-        //        TODO: better errors
-
         foreach ($items as $item) {
             $delivery = (new Delivery())
                       ->setClient($client)
-                      ->setItem($item)
+                      ->setDeliveryItem($item)
                       ->setDeliveredAt(new \DateTime());
 
             $em->persist($delivery);
