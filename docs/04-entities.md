@@ -317,8 +317,27 @@
 | pay | boolean | Платная | - |
 | document | [Document](#document) | Документ | - |
 
+## <a name="delivery-item">DeliveryItem</a>
 
-TODO: add service-item desc
+Предмет в пункте выдаче
+
+| Свойство | Тип  | Описание  | По умолчанию  |
+|---|---|---|---|
+| name | string | Название | - |
+| category | integer | Категория | - |
+| limitDays | integer | Количество дней через которое можно снова выдавать | - |
+
+Категории: 3 - одежда, 17 - предметы гигиены, 22 - костыли/трости.
+
+## <a name="delivery">Delivery</a>
+
+Выдача предмета в пункте выдачи.
+
+| Свойство | Тип  | Описание  | По умолчанию  |
+|---|---|---|---|
+| client | [Client](#client) | Клиент | - |
+| deliveryItem | [DeliveryItem](#deliveryItem) | Выданный предмет | - |
+| deliveredAt | date | Когда выдано | - |
 
 ## <a name="shelter-history">ShelterHistory</a>
 
