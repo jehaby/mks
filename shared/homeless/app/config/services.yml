@@ -376,3 +376,6 @@ services:
   app.meta_service:
     class: AppBundle\Service\MetaService
     arguments: ['@doctrine.orm.entity_manager']
+
+  app.security.api_authenticator:
+    class: AppBundle\Security\ApiAuthenticator

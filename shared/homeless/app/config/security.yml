@@ -16,6 +16,14 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
+        api:
+            pattern: ^/api
+            context: user
+            stateless: false
+            anonymous: true
+            guard:
+                authenticators: [app.security.api_authenticator]
+
         main:
             pattern:            .*
             context:            user

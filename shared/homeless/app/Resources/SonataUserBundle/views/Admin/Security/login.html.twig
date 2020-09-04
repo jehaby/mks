@@ -72,4 +72,18 @@
         </div>
     </div>
 
+    <script>
+        $(function() {
+            // adds a `_target_path` hidden input when `_target_path` url param present.
+            // it's useful for redirects from non-symfony routes, which isn't saved in symfony session.
+            // e.g. `humaid` app.
+            // more info on `_target_path` is here: https://symfony.com/doc/2.8/security/form_login.html
+            const targetPath = (new URLSearchParams(window.location.search)).get('_target_path');
+            if (targetPath) {
+                const targetPathInput = $('<input type="hidden" name="_target_path"/>').attr('value', targetPath);
+                $('form').append(targetPathInput);
+            }
+        })
+    </script>
+
 {% endblock sonata_wrapper %}

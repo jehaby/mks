@@ -1,6 +1,6 @@
 (ns humaid.app
   (:require
-   [ajax.core :refer [GET POST]]
+   [ajax.core :refer [GET POST] :as ajax]
    [clojure.string :as string]
    [goog.events :as events]
    [goog.history.EventType :as HistoryEventType]
@@ -61,6 +61,18 @@
 
 ;; Requests
 ;; --------------------
+
+(def auth-interceptor
+  (ajax/to-interceptor
+   {:name "Auth interceptor"
+    :response
+    (fn [response]
+      (if (= 401 (ajax.protocols/-status response))
+        (do
+          (set! (.-href js/window.location) "/login?_target_path=/humaid/")
+          (reduced [0 nil]))
+        response
+        ))}))
 
 (defn load-client! [id]
   (GET (str (:api-addr config) "/clients/" id)
@@ -384,6 +396,7 @@
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
+  (swap! ajax/default-interceptors concat [auth-interceptor])
   (load-delivery-items!)
   (hook-browser-navigation!)
   (mount-components))
