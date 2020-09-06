@@ -3,7 +3,6 @@
 namespace AppBundle\Controller\API;
 
 use AppBundle\Entity\Client;
-use AppBundle\Entity\DeliveryItem;
 use AppBundle\Entity\Delivery;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
@@ -13,12 +12,15 @@ use FOS\RestBundle\Controller\Annotations\View;
 use FOS\RestBundle\Controller\FOSRestController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
 
 class ClientsController extends FOSRestController
 {
 
     /**
+     * @Security("is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_APP_CLIENT_ADMIN_LIST')")
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      * @View(serializerGroups={"client"})
      */
@@ -40,13 +42,15 @@ class ClientsController extends FOSRestController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @Security("is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_APP_CLIENT_ADMIN_VIEW')")
+     *
      * @View(serializerGroups={"client"})
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getClientAction($id)
     {
-        $req = $this->getRequest();
-
         $em = $this->getDoctrine()->getEntityManager();
         $qb = $em->createQueryBuilder();
 
@@ -68,6 +72,9 @@ class ClientsController extends FOSRestController
 
     /**
      * @Route("/clients/{clientID}/deliveries")
+     *
+     * @Security("is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_APP_SERVICE_ADMIN_ALL')")
+     *
      * TODO: better api docs
      * @param $clientID
      * @return \Symfony\Component\HttpFoundation\Response
@@ -95,6 +102,9 @@ class ClientsController extends FOSRestController
     /**
      * @Route("/clients/{clientID}/services")
      * @Rest\QueryParam(name="types", description="array of service type ids")
+     *
+     * @Security("is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_APP_SERVICE_ADMIN_ALL')")
+     *
      * TODO: better api docs
      * @param $clientID
      * @return \Symfony\Component\HttpFoundation\Response
@@ -140,6 +150,9 @@ class ClientsController extends FOSRestController
      * @Route("/clients/{clientID}/deliveries")
      * TODO: better api docs
      * @param $clientID
+     *
+     * @Security("is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_APP_SERVICE_ADMIN_ALL')")
+     * 
      * @return \Symfony\Component\HttpFoundation\Response
      * @View(serializerGroups={"client"})
      */
