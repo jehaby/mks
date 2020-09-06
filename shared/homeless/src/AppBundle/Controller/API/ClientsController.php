@@ -57,7 +57,6 @@ class ClientsController extends FOSRestController
                     ->where('c.id = :id')
                     ->setParameter('id', $id)
                     ->getQuery()
-                    ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)
                     ->getSingleResult(Query::HYDRATE_ARRAY);
         } catch (NoResultException $e) {
             throw new NotFoundHttpException('Client not found');
