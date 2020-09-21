@@ -14,9 +14,9 @@
    [reitit.frontend :as rf])
   (:import goog.History))
 
-(def config {:api-addr "/api/v1"
-             :mks-addr ""
-             :app-prefix "/humaid"})
+(goog-define API-ADDR "/api/v1")
+(goog-define MKS-ADDR "")
+(goog-define APP-PREFIX "/humaid")
 
 (def delivery-item-categories {3 "Одежда"
                              17 "Гигиена"
@@ -56,7 +56,7 @@
 (defn client-photo [photo-name]
   ;; TODO: default photo
   (when photo-name
-    (str (:mks-addr config) "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
+    (str MKS-ADDR "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
 
 
 ;; Requests
@@ -69,13 +69,14 @@
     (fn [response]
       (if (= 401 (ajax.protocols/-status response))
         (do
-          (set! (.-href js/window.location) "/login?_target_path=/humaid/")
+          (let [login-addr  "/login?_target_path=/humaid/"]
+            (set! (.-href js/window.location) login-addr))
           (reduced [0 nil]))
         response
         ))}))
 
 (defn load-client! [id]
-  (GET (str (:api-addr config) "/clients/" id)
+  (GET (str API-ADDR "/clients/" id)
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :client %)
@@ -87,7 +88,7 @@
         }))
 
 (defn load-client-deliveries! [client-id]
-  (GET (str (:api-addr config) "/clients/" client-id "/deliveries")
+  (GET (str API-ADDR "/clients/" client-id "/deliveries")
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :client-deliveries %)
@@ -99,7 +100,7 @@
         }))
 
 (defn load-client-services! [client-id]
-  (GET (str (:api-addr config) "/clients/" client-id "/services")
+  (GET (str API-ADDR "/clients/" client-id "/services")
        {:response-format :json
         :keywords? true
         :vec-strategy :rails ;; https://cljdoc.org/d/cljs-ajax/cljs-ajax/0.8.0/api/ajax.url
@@ -113,7 +114,7 @@
         }))
 
 (defn load-delivery-items! []
-  (GET (str (:api-addr config) "/delivery_items")
+  (GET (str API-ADDR "/delivery_items")
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :humaid-items %)
@@ -122,7 +123,7 @@
         }))
 
 (defn save-items! [client-id item-ids]
-  (POST (str (:api-addr config) "/clients/" client-id "/deliveries")
+  (POST (str API-ADDR "/clients/" client-id "/deliveries")
         {:params {"item_ids" @item-ids}
          :format :json
          :handler #(do
@@ -139,7 +140,7 @@
           (reset! search-res nil))
       (when (> (count name) 2)
         (do (start-stopwatch!)
-            (GET (str (:api-addr config) "/clients/search")
+            (GET (str API-ADDR "/clients/search")
                  {:params {:v name}
                   :response-format :json
                   :keywords? true
@@ -180,7 +181,7 @@
             not-found (= clients [])]
 
         [:div.column
-         [:h3 "Поиск клиента"]
+         [:h3 "Поиск клиента 11"]
          [:div.control
           [:input
            {:class ["input" "is-large" (when not-found "is-danger")]
@@ -194,12 +195,12 @@
                :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
            ^{:key id}
            [:div.is-size-2
-            [:a {:href (str (:app-prefix config) "/#/clients/" id)}
+            [:a {:href (str APP-PREFIX "/#/clients/" id)}
              (str (client-fullname client) " (" birth-date ")")]]
            )])]]))
 
 (defn delivery-link [id kind]
-  (str (:app-prefix config) "/#/clients/" id "/delivery/" (name kind)))
+  (str APP-PREFIX "/#/clients/" id "/delivery/" (name kind)))
 
 (defn client-page [{{id :id} :path}]
   (r/with-let [_ (do (load-client! id)

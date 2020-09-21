@@ -13,13 +13,14 @@
  :dev-http {8142
             {:root "public"
 
-             ;; адрес на котором запущен МКС
-             :proxy-url "http://localhost" ;; TODO use config
+             ;; Адрес на котором запущен МКС.
+             ;; Подробнее: https://shadow-cljs.github.io/docs/UsersGuide.html#dev-http-proxy
+             :proxy-url "http://localhost/app_dev.php"
              }}
 
  :builds
- {:app {:target :browser
-;;        :output-dir "public/js"
-        ;;        :asset-path "/js"
-        :modules {:main {:init-fn humaid.app/init!}}}}}
-
+ {:app
+  {:target :browser
+   :dev {:closure-defines {humaid.app/APP-PREFIX ""
+                           humaid.app/MKS-ADDR "http://localhost/"}}
+   :modules {:main {:init-fn humaid.app/init!}}}}}
