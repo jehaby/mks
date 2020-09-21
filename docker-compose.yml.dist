@@ -1,4 +1,8 @@
 version: '2'
+
+volumes:
+  humaid-public:
+
 services:
   nginx:
     container_name: mks-nginx
@@ -17,12 +21,19 @@ services:
       - php
     volumes:
       - "./shared/logs/nginx:/var/log/nginx"
-      - "./shared/humaid/public:/var/www/humaid"
+      - "humaid-public:/var/www/humaid"
     networks:
       default:
         aliases:
           - $NGINX_ALIAS
     restart: always
+  humaid-build:
+    container_name: humaid-build
+    build:
+      context: ./shared/humaid
+      dockerfile: ./../../docker/humaid/Dockerfile
+    volumes:
+      - "humaid-public:/humaid/public"
   php:
     container_name: mks-app
     build:
