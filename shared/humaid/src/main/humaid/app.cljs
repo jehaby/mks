@@ -1,18 +1,26 @@
 (ns humaid.app
   (:require
    [ajax.core :refer [GET POST] :as ajax]
+   [clojure.spec.alpha :as s]
    [clojure.string :as string]
    [goog.events :as events]
    [goog.history.EventType :as HistoryEventType]
    [goog.string :as gstring]
    [goog.string.format]
+   [humaid.ajax :as aj]
    [humaid.date :as date]
    [humaid.notification :as ntfc]
+   [humaid.util :as u]
    [reagent-keybindings.keyboard :as kb]
    [reagent.core :as r]
    [reagent.dom :as rdom]
-   [reitit.frontend :as rf])
+   [reitit.frontend :as rf]
+
+   [clojure.spec.test.alpha :as stest]
+
+   )
   (:import goog.History))
+
 
 (goog-define API-ADDR "/api/v1")
 (goog-define MKS-ADDR "")
@@ -58,6 +66,16 @@
   (when photo-name
     (str MKS-ADDR "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
 
+(defn store-if-valid!
+  ;; Returns funciton which validates `data` agaings `spec-key`.
+  ;; It saves valid data in db under `store-key` or logs validation errors to console
+  ;; and screams in panic.
+  [store-key spec-key]
+  (fn [data]
+    (if (s/valid? spec-key data)
+      (swap! state assoc store-key data)
+      (do (prn "spec for" spec-key "failed: " (s/explain spec-key data))
+          (ntfc/danger! (str "Ошибка валидации данных. spec-key: " spec-key))))))
 
 ;; Requests
 ;; --------------------
@@ -77,8 +95,7 @@
 
 (defn load-client! [id]
   (GET (str API-ADDR "/clients/" id)
-       {:response-format :json
-        :keywords? true
+       {:response-format (aj/json-resp (aj/key-fn-ns (namespace ::_)))
         :handler #(swap! state assoc :client %)
         :error-handler
         #(if (= 404 (:status %))
@@ -89,9 +106,13 @@
 
 (defn load-client-deliveries! [client-id]
   (GET (str API-ADDR "/clients/" client-id "/deliveries")
-       {:response-format :json
-        :keywords? true
-        :handler #(swap! state assoc :client-deliveries %)
+       {:response-format
+        (aj/json-resp (merge (aj/key-fn-ns (namespace ::_))
+                             {:transform-map
+                              {::delivered-at date/str->date
+                               ::delivery-item-id u/str->int
+                               }}))
+        :handler (store-if-valid! :client-deliveries ::deliveries)
         :error-handler
         #(if (= 404 (:status %))
            (do (ntfc/danger! (gstring/format "Клиент (id = %d) не найден" client-id))
@@ -101,8 +122,7 @@
 
 (defn load-client-services! [client-id]
   (GET (str API-ADDR "/clients/" client-id "/services")
-       {:response-format :json
-        :keywords? true
+       {:response-format (aj/json-resp (aj/key-fn-ns "service"))
         :vec-strategy :rails ;; https://cljdoc.org/d/cljs-ajax/cljs-ajax/0.8.0/api/ajax.url
         :params {:types (keys delivery-item-categories)}
         :handler #(swap! state assoc :client-services %)
@@ -115,8 +135,7 @@
 
 (defn load-delivery-items! []
   (GET (str API-ADDR "/delivery_items")
-       {:response-format :json
-        :keywords? true
+       {:response-format  (aj/json-resp (aj/key-fn-ns "delivery-item"))
         :handler #(swap! state assoc :humaid-items %)
         :error-handler
         #(ntfc/danger! "Ошибка при получении списка вещей. Попробуйте перезагрузить страницу.")
@@ -181,7 +200,7 @@
             not-found (= clients [])]
 
         [:div.column
-         [:h3 "Поиск клиента 11"]
+         [:h3 "Поиск клиента"]
          [:div.control
           [:input
            {:class ["input" "is-large" (when not-found "is-danger")]
@@ -199,8 +218,8 @@
              (str (client-fullname client) " (" birth-date ")")]]
            )])]]))
 
-(defn delivery-link [id kind]
-  (str APP-PREFIX "/#/clients/" id "/delivery/" (name kind)))
+(defn delivery-link [client-id kind]
+  (str APP-PREFIX "/#/clients/" client-id "/delivery/" (name kind)))
 
 (defn client-page [{{id :id} :path}]
   (r/with-let [_ (do (load-client! id)
@@ -246,6 +265,41 @@
      [:button.button {:on-click #(swap! state assoc :active? false) :aria-label "close"} "Нет"]]
     ]])
 
+(s/def ::delivered-at #(instance? js/Date %))
+(s/def ::delivery-item-id pos-int?)
+(s/def ::delivery (s/keys :req [::delivered-at ::delivery-item-id]))
+(s/def ::deliveries (s/coll-of ::delivery))
+
+
+(s/def ::id pos-int?)
+(s/def ::limit-days nat-int?)
+(s/def ::delivery-item (s/keys :req [::id ::limit-days]))
+
+;; (s/def ::date #(instance? js/Date %))
+;; (s/def ::nil nil?)
+;; (s/fdef delivery-unavailable-until
+;;   :args (s/cat ::deliveries ::delivery-item)
+;;   :ret (s/nilable ::date))
+
+(defn delivery-unavailable-until
+  ;; deliveries -- list of items delivered to a client (list of maps with :deliveryItemID and :deliveredAt keys).
+  ;; When current item (2nd arg) cannot be issued today returns nearest available date.
+  [deliveries {item-id ::id limit-days ::limit-days} today]
+  (prn "fofofo" deliveries item-id limit-days today)
+  (when-let [item-delivery (some
+                            #(when (= item-id (::delivery-item-id %)) %)
+                            deliveries)]
+    (prn "after when " item-delivery)
+    (let [next-available-date (date/add-days (::delivered-at item-delivery) limit-days)]
+      (when (< today next-available-date)
+        next-available-date))))
+
+;; (def res (let [deliveries [{::delivery-item-id 10 ::delivered-at (date/str->date "2020-08-17")}]
+;;       delivery-item {::id 5 ::limit-days 5}
+;;       today (date/today)]
+;;          (delivery-unavailable-until deliveries delivery-item today)
+;;   ))
+
 (defn delivery-page [{{kind :kind id :id} :path}]
   (r/with-let [_ (start-stopwatch!)
                _ (when-not (:client @state)
@@ -271,21 +325,7 @@
                            (if (empty? @selected-items)
                              (set-hash! url)
                              (swap! redirect-modal-state assoc :active? true
-                                    :url url)))
-
-               delivery-unavailable-until
-               (fn
-                 ;; deliveries -- list of items delivered to a client (list of maps with :deliveryItemID and :deliveredAt keys).
-                 ;; When current item (2nd arg) cannot be issued today returns nearest available date.
-                 [deliveries {item-id :id limit-days :limitDays}]
-                 (when-let [item-delivery (some
-                                           #(when (= (str item-id) (:deliveryItemID %)) %)
-                                           deliveries)]
-                   (let [date (js/Date. (:deliveredAt item-delivery))
-                         next-available-date (date/add-days  date limit-days)]
-                     (when (< (date/today) next-available-date)
-                       next-available-date))))]
-
+                                    :url url)))]
     (if-let [client (:client @state)]
 
       [:section.section.container.content
@@ -305,14 +345,15 @@
         [:section.column
          (let [selected @selected-items
                items (filter #(= category-id (:category %)) (:humaid-items @state))
-               deliveries (:client-deliveries @state)]
+               deliveries (:client-deliveries @state)
+               today (date/today)]
            [:div.container.content
             [:h3 heading]
             [:p.is-size-5.has-text-weight-light (str " " (:name client))]
             [:section
 
              (for [[{:keys [id name category limitDays] :as item} key] (map vector items (concat hotkeys (repeat nil)))
-                   :let [unavailable-until (delivery-unavailable-until deliveries item)
+                   :let [unavailable-until (delivery-unavailable-until deliveries item today)
                          selected? (contains? selected id)]]
                [:<> {:key id}
                 [:button

@@ -5,10 +5,12 @@
   "src/test"]
 
  :dependencies
- [[cljs-ajax "0.8.0"]
+ [[camel-snake-kebab "0.4.1"]
+  [cljs-ajax "0.8.0"]
   [metosin/reitit "0.5.5"]
   [reagent "0.10.0"]
-  [org.clojars.frozenlock/reagent-keybindings "1.0.2"]]
+  [org.clojars.frozenlock/reagent-keybindings "1.0.2"]
+  [org.clojure/test.check "0.10.0"]] ;; TODO: dev dependency
 
  :dev-http {8142
             {:root "public"
@@ -23,4 +25,12 @@
   {:target :browser
    :dev {:closure-defines {humaid.app/APP-PREFIX ""
                            humaid.app/MKS-ADDR "http://localhost/"}}
-   :modules {:main {:init-fn humaid.app/init!}}}}}
+   :modules {:main {:init-fn humaid.app/init!}}
+   :devtools {:repl-init-ns humaid.app}}
+
+  :test
+  {:target    :browser-test
+   :test-dir  "resources/public/js/test"
+   :devtools  {:http-port          8021
+               :http-root          "resources/public/js/test"
+               :repl-init-ns humaid.app-test}}}}
