@@ -181,7 +181,7 @@
             not-found (= clients [])]
 
         [:div.column
-         [:h3 "Поиск клиента 11"]
+         [:h3 "Поиск клиента"]
          [:div.control
           [:input
            {:class ["input" "is-large" (when not-found "is-danger")]
