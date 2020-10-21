@@ -1,9 +1,5 @@
 version: '2'
 
-volumes:
-  maven_deps:
-  npm_deps:
-
 services:
   nginx:
     container_name: mks-nginx
@@ -22,7 +18,6 @@ services:
       - php
     volumes:
       - "./shared/logs/nginx:/var/log/nginx"
-      - "./shared/humaid/public:/var/www/humaid/public"
     networks:
       default:
         aliases:
@@ -56,20 +51,3 @@ services:
         MYSQL_USER: $MYSQL_USER
         MYSQL_PASSWORD: $MYSQL_PASSWORD
     restart: always
-  humaid_build:
-    container_name: mks-humaid-build
-    image: theasp/clojurescript-nodejs:shadow-cljs
-    build:
-      context: ./docker/cljs
-      dockerfile: Dockerfile
-      args:
-        UID: $UID
-        GUID: $GUID
-    working_dir: /app
-    volumes:
-      - "npm_deps:/home/node/.npm/"
-      - "maven_deps:/home/node/.m2/"
-      - "./shared/humaid:/app/"
-    command: >
-      bash -c "npm install
-      && npx shadow-cljs release :app"

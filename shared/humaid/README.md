@@ -4,14 +4,35 @@
 
 ## Техническая часть 
 
-SPA на Clojurescript. Использует библиотеку `reagent`, которая представляет из себя обвязку над реактом.
+SPA написанное на ClojureScript. Использует библиотеку [Reagent](https://reagent-project.github.io/), которая представляет из себя обвязку над [реактом](https://reactjs.org/).
 
-Готовый javascript компилируется из `*.cljs` с помощью утилиты [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html#_standalone_via_code_npm_code): 
+В качестве сборщика используется утилита [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html#_standalone_via_code_npm_code) (что-то вроде аналога webpack/gulp для ClojureScript).
+
+Приложение общается с МКС через API. Пользователь должен быть авторизован в МКС.
+
+## Сборка для продакшена
+
+Готовая статика (html/css/js) собирается с помощью докер-образа (`/docker/cljs/Dockerfile`) командой
+
+    make humaid_build_prod # из корневой директории mks
+    # под капотом: docker build  --file ./docker/cljs/Dockerfile --tag mks_humaid_app ./shared/humaid/
+
+Затем образ `mks_humaid_app` используется при сборке образа ``nginx`` (см. `/docker/nginx/Dockerfile`).
+Чтобы увидеть сделанные в коде изменения нужно пересобрать и перезапустить сервирс `nginx`.
+
+    docker-compose up --build nginx
+
+## Разбработка
+
+Для разработки рекомендуется установить локально [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html#_installation).
+
+Затем в директории проекта (`./shared/humaid`):
 
     npm install
 
-    npx shadow-cljs release :app
-    
+    npx shadow-cljs watch :app
 
-Приложение общается с МКС через API. Пользователь должен быть авторизован в МКС.
+Приложение будет доступно по адресу http://localhost:8142. Порт можно поменять в конфиге (`shadow-cljs.edn`).
+
+Среди кложуристов принято запускать это дело из редактора/IDE. Если интересно узнать больше то можно погуглить "clojure[script] repl driven development". Например [[1](https://www.youtube.com/watch?v=rQ802kSaip4)], [[2](https://www.youtube.com/watch?v=Qx0-pViyIDU)].
 

@@ -7,15 +7,16 @@ RUN apt-get update \
   && apt-get -q -y install openjdk-8-jdk curl \
   && curl -s https://download.clojure.org/install/linux-install-$CLOJURE_VER.sh | bash
 
-ARG UID
-ARG GUID
-
-USER root
-RUN usermod -u $UID node
-RUN groupmod -g $GUID node
-
 WORKDIR /app
 
-USER node:node
+COPY shadow-cljs.edn package.json package-lock.json ./
+RUN npm install
+RUN npx shadow-cljs
+
+COPY src src
+COPY public/index.html public/index.html
+COPY public/css public/css
+
+RUN npx shadow-cljs release :app
 
 CMD ["sh"]

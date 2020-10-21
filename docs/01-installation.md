@@ -98,6 +98,8 @@ sudo chmod +x /usr/local/bin/docker-compose
     ```
     
     после собираем контейнеры
+    
+    > make humaid_build_prod # сборка приложения для пункта выдачи (./shared/humaid)
 
     > docker-compose build
     
