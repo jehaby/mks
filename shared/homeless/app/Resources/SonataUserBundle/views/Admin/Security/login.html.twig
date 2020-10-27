@@ -40,6 +40,7 @@
 
                     {% if target_path %}
                         <input type="hidden" name="_target_path" value="{{ target_path }}"/>
+                        <input type="hidden" name="_failure_path" value="/login?_target_path={{ target_path }}"/>
                     {% endif %}
 
                     <div class="form-group has-feedback">
