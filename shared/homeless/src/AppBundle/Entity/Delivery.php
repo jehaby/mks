@@ -16,7 +16,7 @@ class Delivery extends BaseEntity
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="Client")
+     * @ORM\ManyToOne(targetEntity="Client", inversedBy="deliveries")
      */
     private $client;
 
