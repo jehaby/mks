@@ -1,5 +1,4 @@
 version: '2'
-
 services:
   nginx:
     container_name: mks-nginx
