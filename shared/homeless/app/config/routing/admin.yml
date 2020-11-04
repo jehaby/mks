@@ -5,10 +5,6 @@ root:
         route: my_clients
         permanent: true
 
-login:
-    path:     /login
-    defaults: { _controller: AppBundle:AdminSecurity:login }
-
 admin:
     resource: '@SonataAdminBundle/Resources/config/routing/sonata_admin.xml'
 
