@@ -3,6 +3,7 @@
 namespace AppBundle\View\API;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientFieldValue;
 
 class ClientResponse {
 
@@ -79,7 +80,7 @@ class ClientResponse {
         $this->photoName = $client->getPhotoName();
     }
 
-    public function setDiseases($diseases)
+    public function setDiseases(ClientFieldValue $diseases)
     {
         if (is_null($diseases)) {
             return;
