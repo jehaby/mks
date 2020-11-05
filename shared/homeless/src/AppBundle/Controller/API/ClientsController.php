@@ -3,9 +3,9 @@
 namespace AppBundle\Controller\API;
 
 use AppBundle\Entity\Client;
+use AppBundle\Entity\ClientFieldValue;
 use AppBundle\Entity\Delivery;
-use Doctrine\ORM\NoResultException;
-use Doctrine\ORM\Query;
+use AppBundle\View\API\ClientResponse;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\Annotations\Route;
 use FOS\RestBundle\Controller\Annotations\View;
@@ -51,22 +51,27 @@ class ClientsController extends FOSRestController
      */
     public function getClientAction($id)
     {
-        $em = $this->getDoctrine()->getEntityManager();
-        $qb = $em->createQueryBuilder();
+        $client= $this->getDoctrine()
+            ->getRepository(Client::class)
+            ->find($id);
 
-        try {
-            $client = $qb
-                    ->select(['c'])
-                    ->from('AppBundle\Entity\Client', 'c')
-                    ->where('c.id = :id')
-                    ->setParameter('id', $id)
-                    ->getQuery()
-                    ->getSingleResult(Query::HYDRATE_ARRAY);
-        } catch (NoResultException $e) {
+        if (is_null($client)) {
             throw new NotFoundHttpException('Client not found');
         }
 
-        $view = $this->view($client, 200);
+        $cr = new ClientResponse($client);
+
+        $extraFields = explode(',', $this->getRequest()->query->get('fetch'));
+
+        if (in_array('diseases', $extraFields)) {
+            $diseases = $this->getDoctrine()
+                ->getRepository(ClientFieldValue::class)
+                ->findOneByClientAndFieldCode($client, 'disease');
+
+            $cr->setDiseases($diseases);
+        }
+
+        $view = $this->view($cr, 200);
         return $this->handleView($view);
     }
 

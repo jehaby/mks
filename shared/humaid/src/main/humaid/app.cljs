@@ -76,7 +76,7 @@
         ))}))
 
 (defn load-client! [id]
-  (GET (str API-ADDR "/clients/" id)
+  (GET (str API-ADDR "/clients/" id "?fetch=diseases")
        {:response-format :json
         :keywords? true
         :handler #(swap! state assoc :client %)
@@ -227,9 +227,10 @@
            [kb/kb-action "3" #(set-hash! crutches)]])
 
         [:div.column.is-3
-         [:img
-          {:src (client-photo (:photoName client))}]
-         [:p.is-size-5 (client-fullname client)]]]]
+         [:img {:src (client-photo (:photo_name client))}]
+         [:p.is-size-5 (client-fullname client)]
+         (if (some #{"Туберкулез"} (:diseases client))
+           [:p.is-size-5.has-text-danger "Болеет туберкулёзом!"])]]]
 
       [modal-loading]
       )))
