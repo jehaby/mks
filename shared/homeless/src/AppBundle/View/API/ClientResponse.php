@@ -80,7 +80,10 @@ class ClientResponse {
         $this->photoName = $client->getPhotoName();
     }
 
-    public function setDiseases(ClientFieldValue $diseases)
+    /**
+     * @param ClientFieldValue|null $diseases
+     */
+    public function setDiseases($diseases)
     {
         if (is_null($diseases)) {
             return;
