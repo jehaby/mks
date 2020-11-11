@@ -27,14 +27,9 @@ class ClientsController extends FOSRestController
     public function getClientsSearchAction()
     {
         // TODO: reuse https://github.com/homelessru/mks/blob/master/shared/homeless/src/AppBundle/Controller/AppController.php#L136 ?
-
         $searchVal = $this->getRequest()->query->get('v'); // TODO: deprecated in Symfony 3+, inject
         $clients = $this->getDoctrine()->getRepository('AppBundle:Client')
                         ->search($searchVal);
-
-        if (count($clients) === 0) {
-            throw new NotFoundHttpException();
-        }
 
         $view = $this->view($clients, 200);
         return $this->handleView($view);
