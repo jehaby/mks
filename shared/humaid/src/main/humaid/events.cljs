@@ -61,6 +61,39 @@
  (fn [db]
    (dissoc db :notification)))
 
+;; Stopwatch
+;; --------------------------------------
+
+(reg-event-fx
+ :start-stopwatch
+ (fn [{:keys [db]} _]
+   (when-not (-> db :stopwatch :started)
+     {:db (assoc-in db [:stopwatch :started] true)
+      :start-stopwatch nil})))
+
+(reg-event-db
+ :inc-stopwatch
+ (fn [db]
+   (update-in db [:stopwatch :val] inc)))
+
+(reg-event-fx
+ :reset-stopwatch
+ (fn [{:keys [db]} _]
+   {:db (assoc db :stopwatch {:started false :val 0})
+    :stop-stopwatch nil}))
+
+(defonce stopwatch-fn (atom nil))
+
+(reg-fx
+ :start-stopwatch
+ (fn []
+   (reset! stopwatch-fn
+           (js/setInterval #(dispatch [:inc-stopwatch]) 1000))))
+
+(reg-fx
+ :stop-stopwatch
+ (fn []
+   (js/clearInterval @stopwatch-fn)))
 
 ;; API calls
 ;; --------------------------------------
@@ -80,9 +113,11 @@
                      :on-success [:api-request-success :search]
                      :on-failure [:api-request-error :search]}
         :db (set-loading db :search true)
+        :dispatch [:start-stopwatch]
         ;; TODO: start stopwatch
         }
-       {:db (dissoc db :search)}))))
+       {:db (dissoc db :search)
+        :dispatch [:reset-stopwatch]}))))
 
 (reg-event-fx
  :client-get
@@ -170,7 +205,7 @@
 (reg-event-db
  :api-request-success
  (fn [db [_ request-name resp]]
-   (prn "IN  :api-request-success " request-name resp)
+   ;; (prn "IN  :api-request-success " request-name resp)
    (-> db
        (set-loading request-name false)
        (assoc request-name resp))))
@@ -178,7 +213,7 @@
 (reg-event-fx
  :api-request-error
  (fn [db [_ request-type response]]
-   (prn "Error in HTTP request. Response: " response)
+   ;; (prn "Error in HTTP request. Response: " response)
    {:db (-> db
             (assoc-in [:errors request-type] (get-in response [:response :errors]))
             (set-loading request-type false))

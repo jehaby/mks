@@ -8,28 +8,7 @@
    [reagent.core :as r]
    [reitit.frontend.easy :as rfe]
    [re-frame.core :refer [subscribe dispatch]]
-   [reagent-keybindings.keyboard :as kb]
-   ))
-
-(defonce stopwatch (r/atom {:val 0
-                            :started false}))
-
-;; Misc
-;; --------------------
-
-(defonce stopwatch-fn (atom nil))
-
-(defn reset-stopwatch! []
-  (js/clearInterval @stopwatch-fn)
-  (swap! stopwatch assoc :val 0 :started false))
-
-(defn start-stopwatch! []
-  (when-not (:started @stopwatch)
-    (swap! stopwatch assoc :started true)
-    (reset! stopwatch-fn
-            (js/setInterval
-             (fn [] (swap! stopwatch update :val inc))
-             1000))))
+   [reagent-keybindings.keyboard :as kb]))
 
 (defn client-fullname [client]
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
@@ -48,8 +27,8 @@
   ([k params query]
    (rfe/href k params query)))
 
-(defn stopwatch-ui []
-  (let [v (:val @stopwatch)
+(defn stopwatch []
+  (let [v @(subscribe [:stopwatch-val])
         min  (quot v 60)
         sec  (rem v 60)]
     [:div
@@ -71,42 +50,38 @@
     [:button.button.is-large.is-loading " -----------"]]])
 
 (defn start-page []
-  (r/with-let [_  (reset-stopwatch!)]
-    [:section.section>div.container>div.content
-     [:section.columns
-      [:div.column.is-2
-       [stopwatch-ui]]
+  [:section.section>div.container>div.content
+   [:section.columns
+    [:div.column.is-2
+     [stopwatch]]
 
-      (let [clients @(subscribe [:search])
-            loading @(subscribe [:loading])
-            not-found (= clients [])]
+    (let [clients @(subscribe [:search])
+          loading @(subscribe [:loading])
+          not-found (= clients [])]
 
-        [:div.column
-         [:h3 "Поиск клиента"]
-         [:div {:class ["control" (when (:search loading) "is-loading")]}
-          [:input
-           {:class ["input" "is-large" (when not-found "is-danger")]
-            :type "text"
-            :placeholder "ФИО..."
-            :on-change #(dispatch [:client-search (-> % .-target .-value)])
-            }]
-          (when not-found [:p.help.is-danger "Не нашли =("])]
+      [:div.column
+       [:h3 "Поиск клиента"]
+       [:div {:class ["control" (when (:search loading) "is-loading")]}
+        [:input
+         {:class ["input" "is-large" (when not-found "is-danger")]
+          :type "text"
+          :placeholder "ФИО..."
+          :on-change #(do (dispatch [:client-search (-> % .-target .-value)]))
+          }]
+        (when not-found [:p.help.is-danger "Не нашли =("])]
 
-         (for [{:keys [id birthDate] :as client} clients
-               :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
-           ^{:key id}
-           [:div.is-size-2
-            [:a {:href (href :client {:client-id id})}
-             (str (client-fullname client) " (" birth-date ")")]]
-           )])]]))
+       (for [{:keys [id birthDate] :as client} clients
+             :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
+         ^{:key id}
+         [:div.is-size-2
+          [:a {:href (href :client {:client-id id})}
+           (str (client-fullname client) " (" birth-date ")")]]
+         )])]])
 
 (defn delivery-link [id kind]
   (href :delivery {:client-id id :delivery-items-kind kind}))
 
 (defn client-page []
-
-  ;;  TODO: stopwatch
-
   (let [loading @(subscribe [:loading])
         client @(subscribe [:client])]
     (if (:client loading)
@@ -116,7 +91,7 @@
       [:section.section.container.content
        [:section.columns
         [:div.column.is-2
-         [stopwatch-ui]
+         [stopwatch]
          [:button.button {:on-click #(dispatch [:push-state :start])} "Завершить выдачу"]]
 
         (let [clothes (delivery-link (:id client) :clothes)
@@ -152,12 +127,6 @@
 
 (defn delivery-page []
   (r/with-let [
-               ;; _ (start-stopwatch!)
-               ;; _ (when-not (:client @state)
-               ;;     (do (load-client! id)
-               ;;         (load-client-deliveries! id)
-               ;;         (load-client-services! id)))
-
                hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./"
                kind (keyword (:delivery-items-kind @(subscribe [:path-params])))
 
@@ -211,7 +180,7 @@
 
          [:section.columns
           [:div.column.is-2
-           [stopwatch-ui]
+           [stopwatch]
            [:p>button.button
             {:on-click #(redirect! selected-items :client {:client-id (:id client)})}
             "Вернуться к списку"]
@@ -261,7 +230,7 @@
              {:disabled (empty? @selected-items)
               :on-click #(dispatch [:save-deliveries (:id client) @selected-items])}
              "Сохранить"]
-;;            [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
+            ;;            [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
             ]]]]
         ))))
 

@@ -1,7 +1,6 @@
 (ns humaid.subs
   (:require [re-frame.core :refer [reg-sub]]))
 
-
 (reg-sub
  :current-route
  (fn [db _]
@@ -11,6 +10,11 @@
  :path-params
  (fn [db _]
    (-> db :current-route :parameters :path)))
+
+(reg-sub
+ :stopwatch-val
+ (fn [db _]
+   (-> db :stopwatch :val)))
 
 (reg-sub
  :search

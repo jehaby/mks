@@ -18,7 +18,8 @@
      :view views/start-page
      :controllers
      [{:start (fn []
-                (dispatch [:clear-search]))}]}]
+                (do (dispatch [:clear-search])
+                    (dispatch [:reset-stopwatch])))}]}]
 
    ["clients/:client-id"
     {:name :client
