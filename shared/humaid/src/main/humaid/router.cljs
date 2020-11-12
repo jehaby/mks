@@ -56,7 +56,6 @@
     (dispatch [:push-state :not-found])))
 
 (defn init-routes! []
-  (js/console.log "initializing routes")
   (rfe/start!
    router
    on-navigate
