@@ -185,3 +185,8 @@
 
     :dispatch [:show-notification :danger
                (str "Ошибка при запросе к серверу: " request-type)]}))
+
+(reg-event-db
+ :clear-search
+ (fn [db _]
+   (dissoc db :search)))

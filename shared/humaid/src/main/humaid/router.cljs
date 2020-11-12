@@ -15,7 +15,10 @@
 
    [""
     {:name :start
-     :view views/start-page}]
+     :view views/start-page
+     :controllers
+     [{:start (fn []
+                (dispatch [:clear-search]))}]}]
 
    ["clients/:client-id"
     {:name :client
