@@ -61,7 +61,7 @@
   (let [s @(subscribe [:notification])]
     (when-not (empty? s)
       [:div {:class ["notification" (str "is-" (name (:kind s)))]}
-       [:button.delete {:on-click clear!}]
+       [:button.delete {:on-click #(dispatch [:clear-notification])}]
        (:msg s)])))
 
 (defn modal-loading []
@@ -273,7 +273,6 @@
 
 (defn page [{:keys [router]}]
   (let [current-route @(subscribe [:current-route])]
-    (prn "IN PAGE " current-route)
     (if current-route
       [(-> current-route :data :view)]
       [not-found-page])))

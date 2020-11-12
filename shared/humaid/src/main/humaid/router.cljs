@@ -33,7 +33,10 @@
        :start (fn [{{:keys [client-id]} :path}]
                 (dispatch [:client-get client-id])
                 (dispatch [:client-get-deliveries client-id])
-                (dispatch [:client-get-services client-id]))}]}]])
+                (dispatch [:client-get-services client-id]))}]}]
+   ["not-found"
+    {:name :not-found
+     :view views/not-found-page}]])
 
 (def router
   (rf/router
@@ -41,8 +44,9 @@
    {:data {:coercion rss/coercion}}))
 
 (defn on-navigate [new-match]
-  (when new-match
-    (dispatch [:navigated new-match])))
+  (if new-match
+    (dispatch [:navigated new-match])
+    (dispatch [:push-state :not-found])))
 
 (defn init-routes! []
   (js/console.log "initializing routes")
