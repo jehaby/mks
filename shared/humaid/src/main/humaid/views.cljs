@@ -48,7 +48,6 @@
   ([k params query]
    (rfe/href k params query)))
 
-
 (defn stopwatch-ui []
   (let [v (:val @stopwatch)
         min  (quot v 60)

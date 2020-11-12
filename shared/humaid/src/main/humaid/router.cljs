@@ -34,6 +34,7 @@
                 (dispatch [:client-get client-id])
                 (dispatch [:client-get-deliveries client-id])
                 (dispatch [:client-get-services client-id]))}]}]
+
    ["not-found"
     {:name :not-found
      :view views/not-found-page}]])
