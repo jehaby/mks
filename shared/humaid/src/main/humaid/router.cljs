@@ -18,8 +18,8 @@
      :view views/start-page
      :controllers
      [{:start (fn []
-                (do (dispatch [:clear-search])
-                    (dispatch [:reset-stopwatch])))}]}]
+                (dispatch [:clear-search])
+                (dispatch [:reset-stopwatch]))}]}]
 
    ["clients/:client-id"
     {:name :client
@@ -27,6 +27,7 @@
      :controllers
      [{:parameters {:path [:client-id]}
        :start (fn [{{:keys [client-id]} :path}]
+                (dispatch [:start-stopwatch])
                 (dispatch [:client-get client-id]))}]}]
 
    ["clients/:client-id/delivery/:delivery-items-kind"
@@ -35,6 +36,7 @@
      :controllers
      [{:parameters {:path [:client-id]}
        :start (fn [{{:keys [client-id]} :path}]
+                (dispatch [:start-stopwatch])
                 (dispatch [:client-get client-id])
                 (dispatch [:client-get-deliveries client-id])
                 (dispatch [:client-get-services client-id]))}]}]

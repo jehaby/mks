@@ -66,7 +66,7 @@
          {:class ["input" "is-large" (when not-found "is-danger")]
           :type "text"
           :placeholder "ФИО..."
-          :on-change #(do (dispatch [:client-search (-> % .-target .-value)]))
+          :on-change #(dispatch [:client-search (-> % .-target .-value)])
           }]
         (when not-found [:p.help.is-danger "Не нашли =("])]
 
