@@ -6,21 +6,10 @@
    [humaid.date :as date]
    [humaid.config :refer [APP-PREFIX MKS-ADDR]]
    [reagent.core :as r]
+   [reitit.frontend.easy :as rfe]
    [re-frame.core :refer [subscribe dispatch]]
    [reagent-keybindings.keyboard :as kb]
    ))
-
-(defn save-items! [client-id item-ids]
-  ;; (POST (str API-ADDR "/clients/" client-id "/deliveries")
-  ;;       {:params {"item_ids" @item-ids}
-  ;;        :format :json
-  ;;        :handler #(do
-  ;;                    (ntfc/success! "Выдача сохранена.")
-  ;;                    (reset! item-ids #{})
-  ;;                    (set-hash! (str "/clients/" client-id)))
-  ;;        :error-handler
-  ;;        #(ntfc/danger! "Ошибка при сохранении выдачи. Попробуйте еще раз.")})
-  )
 
 (defonce stopwatch (r/atom {:val 0
                             :started false}))
@@ -42,9 +31,6 @@
              (fn [] (swap! stopwatch update :val inc))
              1000))))
 
-(defn set-hash! [loc]
-  (set! (.-hash js/window.location) loc))
-
 (defn client-fullname [client]
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
 
@@ -52,6 +38,15 @@
   ;; TODO: default photo
   (when photo-name
     (str MKS-ADDR "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
+
+(defn href
+  "Return relative url for given route. Url can be used in HTML links."
+  ([k]
+   (href k nil nil))
+  ([k params]
+   (href k params nil))
+  ([k params query]
+   (rfe/href k params query)))
 
 
 (defn stopwatch-ui []
@@ -102,12 +97,12 @@
                :let [birth-date (date/date->yy-mm-dd (js/Date. birthDate))]]
            ^{:key id}
            [:div.is-size-2
-            [:a {:href (str APP-PREFIX "/#/clients/" id)}
+            [:a {:href (href :client {:client-id id})}
              (str (client-fullname client) " (" birth-date ")")]]
            )])]]))
 
 (defn delivery-link [id kind]
-  (str APP-PREFIX "/#/clients/" id "/delivery/" (name kind)))
+  (href :delivery {:client-id id :delivery-items-kind kind}))
 
 (defn client-page []
 
@@ -123,7 +118,7 @@
        [:section.columns
         [:div.column.is-2
          [stopwatch-ui]
-         [:button.button {:on-click #(set-hash! "/")} "Завершить выдачу"]]
+         [:button.button {:on-click #(dispatch [:push-state :start])} "Завершить выдачу"]]
 
         (let [clothes (delivery-link (:id client) :clothes)
               hygiene (delivery-link (:id client) :hygiene)
@@ -153,11 +148,10 @@
     [:div.modal-card-body
      [:div.content "Есть несохранённые изменения. Продолжить?"]]
     [:div.modal-card-foot
-     [:button.button {:on-click #(set-hash! (:url @state))} "Да"]
-     [:button.button {:on-click #(swap! state assoc :active? false) :aria-label "close"} "Нет"]]
-    ]])
+     [:button.button {:on-click (:redirect-fn @state)} "Да"]
+     [:button.button {:on-click #(swap! state assoc :active? false) :aria-label "close"} "Нет"]]]])
 
-(defn delivery-page [{{kind :kind id :id} :path}]
+(defn delivery-page []
   (r/with-let [
                ;; _ (start-stopwatch!)
                ;; _ (when-not (:client @state)
@@ -166,7 +160,7 @@
                ;;         (load-client-services! id)))
 
                hotkeys "1234567890qwertyuiopasdfghjklzxcvbnm[];',./"
-               kind (keyword (:delivery-items-kind @(subscribe [:page-params])))
+               kind (keyword (:delivery-items-kind @(subscribe [:path-params])))
 
                category-id (kind {:clothes 3
                                   :hygiene 17
@@ -182,12 +176,14 @@
                                     (swap! selected-items disj item-id)
                                     (swap! selected-items conj item-id)))
 
-               redirect-modal-state (r/atom {:active? false :url nil})
-               redirect! (fn [url selected-items]
-                           (if (empty? @selected-items)
-                             (set-hash! url)
-                             (swap! redirect-modal-state assoc :active? true
-                                    :url url)))
+               redirect-modal-state (r/atom {:active? false})
+               redirect! (fn [selected-items page & params]
+                           (let [redirect-fn #(dispatch (-> (concat [:push-state page] params) vec))]
+                             (if (empty? @selected-items)
+                               (redirect-fn)
+                               (swap! redirect-modal-state assoc
+                                      :active? true
+                                      :redirect-fn redirect-fn))))
 
                delivery-unavailable-until
                (fn
@@ -218,10 +214,10 @@
           [:div.column.is-2
            [stopwatch-ui]
            [:p>button.button
-            {:on-click #(redirect! (str "/clients/" (:id client)) selected-items)}
+            {:on-click #(redirect! selected-items :client {:client-id (:id client)})}
             "Вернуться к списку"]
            [:p>button.button.is-light.is-danger
-            {:on-click #(redirect! "/" selected-items)}
+            {:on-click #(redirect! selected-items :start)}
             "Завершить выдачу"]]
 
           [:section.column
@@ -273,19 +269,11 @@
 (defn not-found-page []
   [:section.section>div.container>div.content
    [:p "404 (страница не найдена)"]
-   [:p  [:a {:href "#/"} "назад"]]])
+   [:p  [:a {:href (href :start)} "назад"]]])
 
-(def pages
-  {:start #'start-page
-   :client #'client-page
-   :delivery #'delivery-page})
-
-(defn page []
-  (let [active-page @(subscribe [:active-page])] ;; I shouldn't pass params to componenets and instead should use only subscriptions.
-
-    (prn "IN PPPPPAGE " active-page)
-    (prn "IN PPPPPAGE 2222 " (get pages active-page))
-
-    [:div
-     [(get pages active-page  #'not-found-page)]
-     [kb/keyboard-listener]]))
+(defn page [{:keys [router]}]
+  (let [current-route @(subscribe [:current-route])]
+    (prn "IN PAGE " current-route)
+    (if current-route
+      [(-> current-route :data :view)]
+      [not-found-page])))

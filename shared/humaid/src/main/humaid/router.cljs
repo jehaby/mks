@@ -1,39 +1,52 @@
 (ns humaid.router
-  (:require
-   [clojure.string :as string]
-   [goog.events :as events]
-   [goog.history.EventType :as HistoryEventType]
-   [re-frame.core :as rf]
-   [reitit.frontend :as reitit]
+  (:require [humaid.views :as views]
+            [re-frame.core :refer [dispatch]]
+            [reagent.core :as reagent]
+            [reitit.core :as r]
+            [reitit.coercion.spec :as rss]
+            [reitit.frontend :as rf]
+            [reitit.frontend.controllers :as rfc]
+            [reitit.frontend.easy :as rfe]))
 
-   )
-  (:import goog.History)
-  )
+(def routes
+  ["/"
+   {:controllers
+    [{:start #(dispatch [:delivery-items-get])}]}
+
+   [""
+    {:name :start
+     :view views/start-page}]
+
+   ["clients/:client-id"
+    {:name :client
+     :view views/client-page
+     :controllers
+     [{:parameters {:path [:client-id]}
+       :start (fn [{{:keys [client-id]} :path}]
+                (dispatch [:client-get client-id]))}]}]
+
+   ["clients/:client-id/delivery/:delivery-items-kind"
+    {:name :delivery
+     :view views/delivery-page
+     :controllers
+     [{:parameters {:path [:client-id]}
+       :start (fn [{{:keys [client-id]} :path}]
+                (dispatch [:client-get client-id])
+                (dispatch [:client-get-deliveries client-id])
+                (dispatch [:client-get-services client-id]))}]}]])
 
 (def router
-  (reitit/router
-   [["/" :start]
-    ["/clients/:client-id" :client]
-    ["/clients/:client-id/delivery/:delivery-items-kind" :delivery]]))
+  (rf/router
+   routes
+   {:data {:coercion rss/coercion}}))
 
-(defn match-route [uri]
-  (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
-       (reitit/match-by-path router)))
+(defn on-navigate [new-match]
+  (when new-match
+    (dispatch [:navigated new-match])))
 
-;; -------------------------
-;; History
-;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-     HistoryEventType/NAVIGATE
-     (fn [event]
-       (prn "EVENT IN HISTORY: " event)
-       (prn "EVENT IN HISTORY 2: " (.-token event))
-       (prn "EVENT IN HISTORY 3: " (match-route (.-token event)))
-       (let [m (match-route (.-token event))]
-         (rf/dispatch-sync [:set-active-page
-                            {:page (get-in m [:data :name])
-                             :params (:parameters m)}]))))
-    (.setEnabled true)))
-
+(defn init-routes! []
+  (js/console.log "initializing routes")
+  (rfe/start!
+   router
+   on-navigate
+   {:use-fragment true}))

@@ -1,15 +1,16 @@
 (ns humaid.subs
   (:require [re-frame.core :refer [reg-sub]]))
 
-(reg-sub
- :active-page
- (fn [db _]
-   (:active-page db)))
 
 (reg-sub
- :page-params
+ :current-route
  (fn [db _]
-   (:page-params db)))
+   (:current-route db)))
+
+(reg-sub
+ :path-params
+ (fn [db _]
+   (-> db :current-route :parameters :path)))
 
 (reg-sub
  :search

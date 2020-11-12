@@ -4,8 +4,30 @@
    [day8.re-frame.http-fx]
    [clojure.string :as string]
    [re-frame.core :refer [reg-event-db reg-event-fx reg-fx dispatch]]
+   [reitit.frontend.easy :as rfe]
+   [reitit.frontend.controllers :as rfc]
    [humaid.config :refer [API-ADDR]]))
 
+;; Routing
+;; --------------------------------------
+
+(reg-event-fx
+ :push-state
+ (fn [db [_ & route]]
+   {:push-state route}))
+
+(reg-event-db
+ :navigated
+ (fn [db [_ new-match]]
+   (prn "IN NAVIGATED: " new-match)
+   (let [old-match   (:current-route db)
+         controllers (rfc/apply-controllers (:controllers old-match) new-match)]
+     (assoc db :current-route (assoc new-match :controllers controllers)))))
+
+(reg-fx
+ :push-state
+ (fn [route]
+   (apply rfe/push-state route)))
 
 ;; Notification
 ;; --------------------------------------
@@ -84,7 +106,7 @@
             (set-loading :client false)
             (assoc-in [:search] []))
 
-    :dispatch-n [[:set-active-page {:page :start}]
+    :dispatch-n [[:push-state :start]
                  (if (= 404 (:status resp))
                    [:show-notification :danger "Клиент не найден"]
                    [:api-request-error :client resp])]}))
@@ -143,8 +165,7 @@
    {:db (-> db
             (set-loading :save-deliveries false))
     :dispatch-n [[:show-notification :success "Выдача сохранена!"]
-                 [:set-active-page {:page :client
-                                    :params {:path {:client-id client-id}}}]]}))
+                 [:push-state :client {:client-id client-id}]]}))
 
 (reg-event-db
  :api-request-success
@@ -164,25 +185,3 @@
 
     :dispatch [:show-notification :danger
                (str "Ошибка при запросе к серверу: " request-type)]}))
-
-(reg-event-fx
- :set-active-page
- (fn [{:keys [db]} [_ {:keys [page params]}]]
-
-   ;; TODO: change browser url (effect!)
-
-   (prn "in set active page: " page params)
-   (let [set-page #(assoc % :active-page page)
-         client-id (get-in params [:path :client-id])]
-     (case page
-       :start {:db (set-page db)}
-
-       :client {:db (set-page db)
-                :dispatch [:client-get client-id]}
-
-       :delivery {:db (-> db
-                          set-page
-                          (assoc-in [:page-params :delivery-items-kind] (get-in params [:path :delivery-items-kind])))
-                  :dispatch-n [[:client-get client-id]
-                               [:client-get-deliveries client-id]
-                               [:client-get-services client-id]]}))))
