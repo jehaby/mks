@@ -8,7 +8,8 @@
    [reagent.core :as r]
    [reitit.frontend.easy :as rfe]
    [re-frame.core :refer [subscribe dispatch]]
-   [reagent-keybindings.keyboard :as kb]))
+   [reagent-keybindings.keyboard :as kb]
+   ))
 
 (defn client-fullname [client]
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
@@ -78,12 +79,13 @@
            (str (client-fullname client) " (" birth-date ")")]]
          )])]])
 
-(defn delivery-link [id kind]
-  (href :delivery {:client-id id :delivery-items-kind kind}))
-
 (defn client-page []
   (let [loading @(subscribe [:loading])
-        client @(subscribe [:client])]
+        client @(subscribe [:client])
+        client-id (:id client)
+        delivery-params (fn [kind] [:delivery
+                                    {:client-id client-id
+                                     :delivery-items-kind kind}])]
     (if (:client loading)
 
       [modal-loading]
@@ -94,18 +96,17 @@
          [stopwatch]
          [:button.button {:on-click #(dispatch [:push-state :start])} "Завершить выдачу"]]
 
-        (let [clothes (delivery-link (:id client) :clothes)
-              hygiene (delivery-link (:id client) :hygiene)
-              crutches (delivery-link (:id client) :crutches)]
           [:div.column.is-3
-           [:p>a {:href clothes} [:button.button.is-large.is-block "1. Одежда"]]
-           [:p>a {:href hygiene} [:button.button.is-large.is-block "2. Гигиена"]]
-           [:p>a {:href crutches}[:button.button.is-large.is-block "3. Костыли/трости"]]
+           [:p>a {:href (apply href (delivery-params :clothes))}
+            [:button.button.is-large.is-block "1. Одежда"]]
+           [:p>a {:href (apply href (delivery-params :hygiene))}
+            [:button.button.is-large.is-block "2. Гигиена"]]
+           [:p>a {:href (apply href (delivery-params :crutches))}
+            [:button.button.is-large.is-block "3. Костыли/трости"]]
 
-           ;; [kb/kb-action "1" #(set-hash! clothes)]
-           ;; [kb/kb-action "2" #(set-hash! hygiene)]
-           ;; [kb/kb-action "3" #(set-hash! crutches)]
-           ])
+           [kb/kb-action "1" #(dispatch (into [:push-state] (delivery-params :clothes)))]
+           [kb/kb-action "2" #(dispatch (into [:push-state] (delivery-params :hygiene)))]
+           [kb/kb-action "3" #(dispatch (into [:push-state] (delivery-params :crutches)))]]
 
         [:div.column.is-3
          [:img {:src (client-photo (:photo_name client))}]
@@ -211,7 +212,9 @@
                      [:span.has-text-weight-light.is-size-6.mx-1
                       (str "(доступно с " (date/date->mm-dd unavailable-until) ")")])]
                   (when key
-                    [kb/kb-action key #(switch-selected! selected-items id)])])]])
+                    [kb/kb-action key #(switch-selected! selected-items id)])
+
+                  ])]])
 
            (when-let [services
                       (seq
@@ -230,7 +233,7 @@
              {:disabled (empty? @selected-items)
               :on-click #(dispatch [:save-deliveries (:id client) @selected-items])}
              "Сохранить"]
-            ;;            [kb/kb-action "ctrl-enter" #(save-items! (:id client) selected-items)]
+            [kb/kb-action "ctrl-enter" #(dispatch [:save-deliveries (:id client) @selected-items])]
             ]]]]
         ))))
 
@@ -242,5 +245,7 @@
 (defn page [{:keys [router]}]
   (let [current-route @(subscribe [:current-route])]
     (if current-route
-      [(-> current-route :data :view)]
+      [:div
+       [kb/keyboard-listener]
+       [(-> current-route :data :view)]]
       [not-found-page])))

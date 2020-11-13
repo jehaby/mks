@@ -5,11 +5,11 @@
   "src/test"]
 
  :dependencies
- [[day8.re-frame/http-fx "v0.2.1"]
-  [cljs-ajax "0.8.0"]
+ [[cljs-ajax "0.8.0"]
+  [day8.re-frame/http-fx "v0.2.0"] ;; TODO: 0.2.1? 
   [metosin/reitit "0.5.5"]
-  [re-frame "1.1.1"]
-  [org.clojars.frozenlock/reagent-keybindings "1.0.2"]]
+  [org.clojars.frozenlock/reagent-keybindings "1.0.2"]
+  [re-frame "1.1.1"]]
 
  :dev-http {8142
             {:root "public"
