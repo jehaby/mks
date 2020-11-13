@@ -15,7 +15,6 @@
   (str (:lastname client) " " (:firstname client) " " (:middlename client)))
 
 (defn client-photo [photo-name]
-  ;; TODO: default photo
   (when photo-name
     (str MKS-ADDR "/uploads/images/client/photo/" (subs photo-name 0 2) "/" photo-name)))
 
@@ -109,7 +108,9 @@
            [kb/kb-action "3" #(dispatch (into [:push-state] (delivery-params :crutches)))]]
 
         [:div.column.is-3
-         [:img {:src (client-photo (:photo_name client))}]
+         (if-let [photo-src (client-photo (:photo_name client))]
+           [:img {:src photo-src}]
+           [:p "Без фото"])
          [:p.is-size-5 (client-fullname client)]
          (when (some #{"Туберкулез"} (:diseases client))
            [:p.is-size-5.has-text-danger "Болеет туберкулёзом!"])]]]
@@ -156,13 +157,13 @@
 
                delivery-unavailable-until
                (fn
-                 ;; deliveries -- list of items delivered to a client (list of maps with :deliveryItemID and :deliveredAt keys).
+                 ;; deliveries -- list of items delivered to a client (list of maps with :delivery_item_id and :delivered_at keys).
                  ;; When current item (2nd arg) cannot be issued today returns nearest available date.
-                 [deliveries {item-id :id limit-days :limitDays}]
+                 [deliveries {item-id :id limit-days :limit_days}]
                  (when-let [item-delivery (some
-                                           #(when (= (str item-id) (:deliveryItemID %)) %)
+                                           #(when (= (str item-id) (:delivery_item_id %)) %)
                                            deliveries)]
-                   (let [date (js/Date. (:deliveredAt item-delivery))
+                   (let [date (js/Date. (:delivered_at item-delivery))
                          next-available-date (date/add-days  date limit-days)]
                      (when (< (date/today) next-available-date)
                        next-available-date))))]
@@ -224,7 +225,7 @@
              [:div.container.content
               [:h5 "Выдачи-услуги"]
               [:ul
-               (for [{comment :comment created-at :createdAt} services
+               (for [{comment :comment created-at :created_at} services
                      :let [created-at (date/date->yy-mm-dd (js/Date. created-at))]]
                  [:li (str comment " (" created-at ")")])]])
 

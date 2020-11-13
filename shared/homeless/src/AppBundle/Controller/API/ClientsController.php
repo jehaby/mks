@@ -87,7 +87,7 @@ class ClientsController extends FOSRestController
                ->getDoctrine()
                ->getEntityManager()
                ->createQueryBuilder()
-               ->select('MAX(d.deliveredAt) AS deliveredAt, IDENTITY(d.deliveryItem) AS deliveryItemID')
+               ->select('MAX(d.deliveredAt) AS delivered_at, IDENTITY(d.deliveryItem) AS delivery_item_id')
                ->from('AppBundle\Entity\Delivery', 'd')
                ->andWhere('IDENTITY(d.client) = :cid')
                ->groupBy('d.deliveryItem')
@@ -119,7 +119,7 @@ class ClientsController extends FOSRestController
         $qb = $this->getDoctrine()->getEntityManager()->createQueryBuilder();
 
         $services = $qb
-                  ->select('s.comment, s.amount, IDENTITY(s.type) AS type, s.createdAt, s.updatedAt')
+                  ->select('s.comment, s.amount, IDENTITY(s.type) AS type, s.createdAt AS created_at, s.updatedAt AS updated_at')
                   ->from('AppBundle\Entity\Service', 's')
                   ->andWhere('IDENTITY(s.client) = :cid')
                   ->andWhere($qb->expr()->in('IDENTITY(s.type)', ':types'))

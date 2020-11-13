@@ -16,7 +16,8 @@ class DeliveryItemsController extends FOSRestController {
     public function getDeliveryItemsAction()
     {
         $res =  $this->getDoctrine()->getEntityManager()
-            ->createQuery('SELECT i.id, i.name, i.category, i.limitDays FROM AppBundle\Entity\DeliveryItem i ORDER BY i.name')
+            ->createQuery('SELECT i.id, i.name, i.category, i.limitDays AS limit_days
+            FROM AppBundle\Entity\DeliveryItem i ORDER BY i.name')
             ->getResult();
 
         $view = $this->view($res, 200);

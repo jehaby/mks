@@ -112,7 +112,6 @@
                      :on-failure [:api-request-error :search]}
         :db (set-loading db :search true)
         :dispatch [:start-stopwatch]
-        ;; TODO: start stopwatch
         }
        {:db (dissoc db :search)
         :dispatch [:reset-stopwatch]}))))
