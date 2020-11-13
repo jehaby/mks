@@ -4,7 +4,7 @@
    [goog.string :as gstring]
    [goog.string.format]
    [humaid.date :as date]
-   [humaid.config :refer [APP-PREFIX MKS-ADDR]]
+   [humaid.config :refer [MKS-ADDR]]
    [reagent.core :as r]
    [reitit.frontend.easy :as rfe]
    [re-frame.core :refer [subscribe dispatch]]

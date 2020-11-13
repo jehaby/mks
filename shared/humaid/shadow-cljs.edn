@@ -6,7 +6,7 @@
 
  :dependencies
  [[cljs-ajax "0.8.0"]
-  [day8.re-frame/http-fx "v0.2.0"] ;; TODO: 0.2.1? 
+  [day8.re-frame/http-fx "v0.2.0"] ;; TODO: 0.2.1?
   [metosin/reitit "0.5.5"]
   [org.clojars.frozenlock/reagent-keybindings "1.0.2"]
   [re-frame "1.1.1"]]

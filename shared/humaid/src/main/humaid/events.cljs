@@ -31,7 +31,7 @@
 ;; Notification
 ;; --------------------------------------
 
-(defonce timeouts (reagent.core/atom {}))
+(defonce timeouts (atom {}))
 
 (reg-fx
  :timeout
@@ -122,7 +122,7 @@
  (fn [{:keys [db]} [_ client-id]]
    (when (or (empty? (:client db))
              (not= (str (get-in db [:client :id])) client-id))
-     {:db (assoc-in db [:loading :client] true)
+     {:db (set-loading db :client true)
       :http-xhrio {:method :get
                    :uri (str API-ADDR "/clients/" client-id)
                    :params {:fetch "diseases"}
@@ -146,7 +146,7 @@
 (reg-event-fx
  :client-get-deliveries
  (fn [{:keys [db]} [_ client-id]]
-   {:db (assoc-in db [:loading :client-deliveries] true)
+   {:db (set-loading db :client-deliveries true)
     :http-xhrio {:method :get
                  :uri (str API-ADDR "/clients/" client-id "/deliveries")
                  :response-format (json-response-format {:keywords? true})
@@ -156,7 +156,7 @@
 (reg-event-fx
  :delivery-items-get
  (fn [{:keys [db]} _]
-   {:db (assoc-in db [:loading :delivery-items] true)
+   {:db (set-loading db :delivery-items true)
     :http-xhrio {:method :get
                  :uri (str API-ADDR "/delivery_items")
                  :response-format (json-response-format {:keywords? true})
@@ -170,7 +170,7 @@
 (reg-event-fx
  :client-get-services
  (fn [{:keys [db]} [_ client-id]]
-   {:db (assoc-in db [:loading :client-services] true)
+   {:db (set-loading db :client-services true)
     :http-xhrio {:method :get
                  :uri (str API-ADDR "/clients/" client-id "/services")
                  :params {:types (keys delivery-item-categories)}
