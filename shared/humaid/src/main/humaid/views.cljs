@@ -202,9 +202,9 @@
                            selected? (contains? selected id)]]
                  [:<> {:key id}
                   [:button
-                   {:class ["button" "mx-2" "my-2" "disabled"
+                   {:class ["button" "mx-2" "my-2"
                             (when selected? "is-success")
-                            (when (and unavailable-until (not selected?)) "is-light")]
+                            (when (and unavailable-until (not selected?)) "is-dark")]
                     :on-click #(switch-selected! selected-items id)}
 
                    (str (when key (str key ". ")) (string/capitalize name))
@@ -229,7 +229,7 @@
                  [:li (str comment " (" created-at ")")])]])
 
            [:div.container.content
-            [:button.button.is-light.is-success
+            [:button.button.is-dark.is-primary
              {:disabled (empty? @selected-items)
               :on-click #(dispatch [:save-deliveries (:id client) @selected-items])}
              "Сохранить"]
