@@ -19,7 +19,6 @@
 (reg-event-db
  :navigated
  (fn [db [_ new-match]]
-   (prn "IN NAVIGATED: " new-match)
    (let [old-match   (:current-route db)
          controllers (rfc/apply-controllers (:controllers old-match) new-match)]
      (assoc db :current-route (assoc new-match :controllers controllers)))))
@@ -50,7 +49,6 @@
 (reg-event-fx
  :show-notification
  (fn [{:keys [db]} [_ kind msg]]
-   (prn "IN SHOW NOT HNDL" kind msg)
    {:db (assoc db :notification {:kind kind :msg msg})
     :timeout {:id :notification
               :event [:clear-notification]
@@ -122,7 +120,6 @@
 (reg-event-fx
  :client-get
  (fn [{:keys [db]} [_ client-id]]
-   (prn "IN CLIENT_GET " client-id)
    (when (or (empty? (:client db))
              (not= (str (get-in db [:client :id])) client-id))
      {:db (assoc-in db [:loading :client] true)
@@ -205,7 +202,6 @@
 (reg-event-db
  :api-request-success
  (fn [db [_ request-name resp]]
-   ;; (prn "IN  :api-request-success " request-name resp)
    (-> db
        (set-loading request-name false)
        (assoc request-name resp))))
@@ -213,7 +209,6 @@
 (reg-event-fx
  :api-request-error
  (fn [db [_ request-type response]]
-   ;; (prn "Error in HTTP request. Response: " response)
    {:db (-> db
             (assoc-in [:errors request-type] (get-in response [:response :errors]))
             (set-loading request-type false))
