@@ -1,12 +1,12 @@
 (ns humaid.app
   (:require
    [ajax.core :as ajax]
+   [ajax.protocols]
    [humaid.events]
    [humaid.router]
    [humaid.subs]
    [humaid.views]
-   [reagent.dom :as rdom]
-   [re-frame.core :as rf]))
+   [reagent.dom :as rdom]))
 
 (def auth-interceptor
   (ajax/to-interceptor

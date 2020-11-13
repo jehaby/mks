@@ -1,11 +1,8 @@
 (ns humaid.router
   (:require [humaid.views :as views]
             [re-frame.core :refer [dispatch]]
-            [reagent.core :as reagent]
-            [reitit.core :as r]
             [reitit.coercion.spec :as rss]
             [reitit.frontend :as rf]
-            [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe]))
 
 (def routes

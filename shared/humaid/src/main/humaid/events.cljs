@@ -13,7 +13,7 @@
 
 (reg-event-fx
  :push-state
- (fn [db [_ & route]]
+ (fn [_ [_ & route]]
    {:push-state route}))
 
 (reg-event-db
@@ -193,7 +193,7 @@
 
 (reg-event-fx
  :save-deliveries-success
- (fn [{:keys [db]} [_ client-id resp]]
+ (fn [{:keys [db]} [_ client-id _]]
    {:db (-> db
             (set-loading :save-deliveries false))
     :dispatch-n [[:show-notification :success "Выдача сохранена!"]

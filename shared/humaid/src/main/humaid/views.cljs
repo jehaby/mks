@@ -111,7 +111,7 @@
         [:div.column.is-3
          [:img {:src (client-photo (:photo_name client))}]
          [:p.is-size-5 (client-fullname client)]
-         (if (some #{"Туберкулез"} (:diseases client))
+         (when (some #{"Туберкулез"} (:diseases client))
            [:p.is-size-5.has-text-danger "Болеет туберкулёзом!"])]]]
       )))
 
@@ -197,7 +197,7 @@
               [:p.is-size-5.has-text-weight-light (str " " (:name client))]
               [:section
 
-               (for [[{:keys [id name category limitDays] :as item} key] (map vector items (concat hotkeys (repeat nil)))
+               (for [[{:keys [id name] :as item} key] (map vector items (concat hotkeys (repeat nil)))
                      :let [unavailable-until (delivery-unavailable-until client-deliveries item)
                            selected? (contains? selected id)]]
                  [:<> {:key id}
@@ -242,7 +242,7 @@
    [:p "404 (страница не найдена)"]
    [:p  [:a {:href (href :start)} "назад"]]])
 
-(defn page [{:keys [router]}]
+(defn page []
   (let [current-route @(subscribe [:current-route])]
     (if current-route
       [:div
