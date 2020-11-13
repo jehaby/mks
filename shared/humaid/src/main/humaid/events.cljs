@@ -138,7 +138,7 @@
             (set-loading :client false)
             (assoc-in [:search] []))
 
-    :dispatch-n [[:push-state :start]
+    :dispatch-n [[:push-state :search]
                  (if (= 404 (:status resp))
                    [:show-notification :danger "Клиент не найден"]
                    [:api-request-error :client resp])]}))

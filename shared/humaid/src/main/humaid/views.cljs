@@ -50,7 +50,7 @@
     [:div.content "Загружается..."]
     [:button.button.is-large.is-loading " -----------"]]])
 
-(defn start-page []
+(defn search-page []
   [:section.section>div.container>div.content
    [:section.columns
     [:div.column.is-2
@@ -94,7 +94,7 @@
        [:section.columns
         [:div.column.is-2
          [stopwatch]
-         [:button.button {:on-click #(dispatch [:push-state :start])} "Завершить выдачу"]]
+         [:button.button {:on-click #(dispatch [:push-state :search])} "Завершить выдачу"]]
 
           [:div.column.is-3
            [:p>a {:href (apply href (delivery-params :clothes))}
@@ -186,7 +186,7 @@
             {:on-click #(redirect! selected-items :client {:client-id (:id client)})}
             "Вернуться к списку"]
            [:p>button.button.is-light.is-danger
-            {:on-click #(redirect! selected-items :start)}
+            {:on-click #(redirect! selected-items :search)}
             "Завершить выдачу"]]
 
           [:section.column
@@ -240,7 +240,7 @@
 (defn not-found-page []
   [:section.section>div.container>div.content
    [:p "404 (страница не найдена)"]
-   [:p  [:a {:href (href :start)} "назад"]]])
+   [:p  [:a {:href (href :search)} "назад"]]])
 
 (defn page []
   (let [current-route @(subscribe [:current-route])]

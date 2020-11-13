@@ -11,8 +11,8 @@
     [{:start #(dispatch [:delivery-items-get])}]}
 
    [""
-    {:name :start
-     :view views/start-page
+    {:name :search
+     :view views/search-page
      :controllers
      [{:start (fn []
                 (dispatch [:clear-search])
