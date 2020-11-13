@@ -4,7 +4,9 @@
 
 ## Техническая часть 
 
-SPA написанное на ClojureScript. Использует библиотеку [Reagent](https://reagent-project.github.io/), которая представляет из себя обвязку над [реактом](https://reactjs.org/).
+SPA написанное на ClojureScript. Использует библиотеки [Reagent](https://reagent-project.github.io/) и [re-frame](https://day8.github.io/re-frame/re-frame/). Reagent под капотом использует [React](https://reactjs.org/).
+
+Если возникнет необходимость разобраться в коде приложения то можно взглянуть на очень хорошо документированный [пример приложения на re-frame](https://github.com/jacekschae/conduit).
 
 В качестве сборщика используется утилита [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html#_standalone_via_code_npm_code) (что-то вроде аналога webpack/gulp для ClojureScript).
 
