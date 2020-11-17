@@ -124,7 +124,6 @@
      {:db (set-loading db :client true)
       :http-xhrio {:method :get
                    :uri (str API-ADDR "/clients/" client-id)
-                   :params {:fetch "diseases"}
                    :response-format (json-response-format {:keywords? true})
                    :on-success [:api-request-success :client]
                    :on-failure [:client-get-failure]}

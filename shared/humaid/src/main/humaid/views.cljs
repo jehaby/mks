@@ -111,9 +111,7 @@
          (if-let [photo-src (client-photo (:photo_name client))]
            [:img {:src photo-src}]
            [:p "Без фото"])
-         [:p.is-size-5 (client-fullname client)]
-         (when (some #{"Туберкулез"} (:diseases client))
-           [:p.is-size-5.has-text-danger "Болеет туберкулёзом!"])]]]
+         [:p.is-size-5 (client-fullname client)]]]]
       )))
 
 (defn redirect-modal [state]
